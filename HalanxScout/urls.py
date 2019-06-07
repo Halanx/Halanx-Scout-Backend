@@ -10,6 +10,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^rest-auth/', include('rest_auth.urls')),
     url(r'^accounts/', include('allauth.urls')),
+
+    url(r'^scouts/', include('scouts.urls')),
 ]
 
 

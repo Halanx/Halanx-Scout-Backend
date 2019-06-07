@@ -20,6 +20,8 @@ INSTALLED_APPS = [
     'rest_auth',
     'allauth',
     'allauth.account',
+
+    'scouts',
 ]
 
 MIDDLEWARE = [
@@ -76,6 +78,17 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication'
     )
 }
+
+# Celery settings
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERYBEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_TIMEZONE = 'UTC'
+CELERY_ENABLE_UTC = True
+CELERY_BEAT_SCHEDULE = {}
 
 # allauth Settings
 ACCOUNT_UNIQUE_EMAIL = False
