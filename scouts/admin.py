@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from scouts.models import ScoutPermanentAddress, ScoutBankDetail, ScoutWallet, ScoutWorkAddress, ScoutPicture, Scout, \
-    ScoutPayment
+    ScoutPayment, ScoutDocument
 
 
 class ScoutPermanentAddressInline(admin.StackedInline):
@@ -26,16 +26,24 @@ class ScoutPictureTabular(admin.TabularInline):
     ordering = ('-timestamp',)
 
 
+class ScoutDocumentInline(admin.TabularInline):
+    model = ScoutDocument
+    extra = 0
+    ordering = ('-timestamp',)
+
+
 @admin.register(Scout)
 class ScoutAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'get_profile_pic_html',)
     readonly_fields = ('get_profile_pic_html',)
+    raw_id_fields = ('user', )
     inlines = (
         ScoutPermanentAddressInline,
         ScoutWorkAddressInline,
         ScoutBankDetailInline,
         ScoutWalletInline,
         ScoutPictureTabular,
+        ScoutDocumentInline,
     )
 
     def get_inline_instances(self, request, obj=None):

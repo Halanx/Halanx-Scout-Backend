@@ -5,23 +5,27 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
-from rest_framework.generics import get_object_or_404
+from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from scouts.models import OTP, Scout
+from common.utils import DocumentTypeCategories
+from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer
+from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument
 from utility.sms_utils import send_sms
 
 
 @api_view(['POST'])
 def register(request):
-    """post:
+    """
+    post:
     Register a new user as scout
     required fields: first_name, last_name, phone_no, otp, password
     optional fields: email
     """
-
     # check if all required fields provided
     required = ['first_name', 'last_name', 'phone_no', 'otp', 'password']
     if not all([request.data.get(field) for field in required]):
@@ -62,10 +66,10 @@ def register(request):
 
 @api_view(['POST'])
 def generate_otp(request, phone_no):
-    """post:
+    """
+    post:
     Generate OTP for requested mobile number
     """
-
     rand = random.randrange(1, 8999) + 1000
     message = "Hi {}! {} is your One Time Password(OTP) for Halanx Scout App.".format(
         request.data.get('first_name', ''), rand)
@@ -92,3 +96,49 @@ def login_with_otp(request):
         return Response({"key": token.key}, status=status.HTTP_200_OK)
     else:
         return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ScoutRetrieveUpdateView(RetrieveUpdateAPIView):
+    serializer_class = ScoutSerializer
+    queryset = Scout.objects.all()
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [BasicAuthentication, TokenAuthentication]
+
+    def get_object(self):
+        return get_object_or_404(Scout, user=self.request.user)
+
+
+class ScoutPictureCreateView(CreateAPIView):
+    serializer_class = ScoutPictureSerializer
+    queryset = ScoutPicture.objects.all()
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [BasicAuthentication, TokenAuthentication]
+
+    def create(self, request, *args, **kwargs):
+        scout = get_object_or_404(Scout, user=request.user)
+        serializer = ScoutPictureSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(scout=scout, is_profile_pic=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ScoutDocumentListCreateView(ListCreateAPIView):
+    serializer_class = ScoutDocumentSerializer
+    queryset = ScoutDocument.objects.all()
+
+    def get_queryset(self):
+        scout = get_object_or_404(Scout, user=self.request.user)
+        documents = scout.documents.order_by('-id')
+        latest_documents = []
+        for doc_type in list(zip(*DocumentTypeCategories))[0]:
+            latest_documents.append(documents.filter(type=doc_type).first())
+        return list(filter(lambda x: x is not None, latest_documents))
+
+    def create(self, request, *args, **kwargs):
+        scout = get_object_or_404(Scout, user=request.user)
+        serializer = ScoutDocumentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(scout=scout)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,7 +1,6 @@
 from django.db import models
-from django.conf import settings
 
-from common.utils import DocumentTypeCategories, PENDING, PaymentStatusCategories, PaymentTypeCategories, DEPOSIT
+from common.utils import DocumentTypeCategories
 
 
 class Document(models.Model):

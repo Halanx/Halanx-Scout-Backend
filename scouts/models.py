@@ -6,10 +6,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.html import format_html
 
-from common.models import AddressDetail, BankDetail, Wallet
+from common.models import AddressDetail, BankDetail, Wallet, Document
 from common.utils import PaymentStatusCategories, PENDING, PAID
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
-    get_thumbnail_upload_path
+    get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path
 from utility.image_utils import compress_image
 
 
@@ -69,15 +69,6 @@ class ScoutPayment(models.Model):
         return str(self.id)
 
 
-class OTP(models.Model):
-    phone_no = models.CharField(max_length=30)
-    password = models.IntegerField(null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return str(self.id)
-
-
 class ScoutPicture(models.Model):
     scout = models.ForeignKey('Scout', on_delete=models.SET_NULL, null=True, related_name='pictures')
     image = models.ImageField(upload_to=get_picture_upload_path, null=True, blank=True)
@@ -101,6 +92,28 @@ class ScoutPicture(models.Model):
             self.scout.profile_pic_thumbnail_url = default_profile_pic_thumbnail_url
             self.scout.save()
         super(ScoutPicture, self).save(*args, **kwargs)
+        
+
+class ScoutDocument(Document):
+    scout = models.ForeignKey('Scout', null=True, on_delete=models.SET_NULL, related_name='documents')
+    image = models.ImageField(upload_to=get_scout_document_upload_path, blank=True, null=True)
+    thumbnail = models.ImageField(upload_to=get_scout_document_thumbnail_upload_path, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.id is None:
+            temp_name, output, thumbnail = compress_image(self.image, quality=90, _create_thumbnail=True)
+            self.image.save(temp_name, content=ContentFile(output.getvalue()), save=False)
+            self.thumbnail.save(temp_name, content=ContentFile(thumbnail.getvalue()), save=False)
+        super(ScoutDocument, self).save(*args, **kwargs)        
+        
+        
+class OTP(models.Model):
+    phone_no = models.CharField(max_length=30)
+    password = models.IntegerField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.id)
 
 
 # noinspection PyUnusedLocal
