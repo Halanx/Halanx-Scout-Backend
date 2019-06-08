@@ -19,6 +19,7 @@ class Scout(models.Model):
                                                                                        message="Phone Number should "
                                                                                                "contain at least 10 "
                                                                                                "numeric characters")])
+    active = models.BooleanField(default=False)
     profile_pic_url = models.CharField(max_length=500, blank=True, null=True, default=default_profile_pic_url)
     profile_pic_thumbnail_url = models.CharField(max_length=500, blank=True, null=True,
                                                  default=default_profile_pic_thumbnail_url)
@@ -105,12 +106,24 @@ class ScoutDocument(Document):
             self.image.save(temp_name, content=ContentFile(output.getvalue()), save=False)
             self.thumbnail.save(temp_name, content=ContentFile(thumbnail.getvalue()), save=False)
         super(ScoutDocument, self).save(*args, **kwargs)        
-        
+
         
 class OTP(models.Model):
     phone_no = models.CharField(max_length=30)
     password = models.IntegerField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ScheduledAvailability(models.Model):
+    scout = models.ForeignKey('Scout', on_delete=models.CASCADE, related_name='scheduled_availabilities')
+    start_time = models.DateTimeField(blank=True, null=True)
+    end_time = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    cancelled = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.id)

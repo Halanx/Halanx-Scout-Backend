@@ -1,5 +1,5 @@
 import random
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.contrib.auth.models import User
 from django.db import IntegrityError
@@ -8,13 +8,15 @@ from rest_framework import status
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
-from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView
+from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView, \
+    RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from common.utils import DocumentTypeCategories
-from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer
-from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument
+from common.utils import DocumentTypeCategories, DATETIME_SERIALIZER_FORMAT
+from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
+    ScheduledAvailabilitySerializer
+from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability
 from utility.sms_utils import send_sms
 
 
@@ -116,7 +118,7 @@ class ScoutPictureCreateView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         scout = get_object_or_404(Scout, user=request.user)
-        serializer = ScoutPictureSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save(scout=scout, is_profile_pic=True)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -142,3 +144,40 @@ class ScoutDocumentListCreateView(ListCreateAPIView):
             serializer.save(scout=scout)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ScheduledAvailabilityListCreateView(ListCreateAPIView):
+    serializer_class = ScheduledAvailabilitySerializer
+    queryset = ScheduledAvailability.objects.all()
+
+    def get_queryset(self):
+        scout = get_object_or_404(Scout, user=self.request.user)
+        return scout.scheduled_availabilities.order_by('start_time').filter(start_time__gte=timezone.now(),
+                                                                            cancelled=False)
+
+    def create(self, request, *args, **kwargs):
+        scout = get_object_or_404(Scout, user=request.user)
+        start_time = datetime.strptime(request.data.get('start_time'), DATETIME_SERIALIZER_FORMAT)
+        end_time = datetime.strptime(request.data.get('end_time'), DATETIME_SERIALIZER_FORMAT)
+        if scout.scheduled_availabilities.filter(start_time__lte=start_time, end_time__gte=end_time).count():
+            return Response({'error': 'A scheduled availability already exists in given time range'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(scout=scout)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ScheduledAvailabilityRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    serializer_class = ScheduledAvailabilitySerializer
+    queryset = ScheduledAvailability.objects.all()
+
+    def get_object(self):
+        return get_object_or_404(ScheduledAvailability, pk=self.kwargs.get('pk'), scout__user=self.request.user,
+                                 cancelled=False, start_time__gte=timezone.now())
+
+    def perform_destroy(self, instance):
+        instance.cancelled = True
+        instance.save()

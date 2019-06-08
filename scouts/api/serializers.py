@@ -1,14 +1,18 @@
 from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework import serializers
 
-from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture
+from common.utils import DATETIME_SERIALIZER_FORMAT
+from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
+    ScheduledAvailability
+from utility.serializers import DateTimeFieldTZ
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'first_name', 'last_name', 'email')
-        
+
 
 class ScoutPermanentAddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,11 +37,11 @@ class ScoutSerializer(serializers.ModelSerializer):
     permanent_address = ScoutPermanentAddressSerializer()
     work_address = ScoutWorkAddressSerializer()
     bank_detail = ScoutBankDetailSerializer()
-    
+
     class Meta:
         model = Scout
         fields = '__all__'
-        read_only_fields = ('phone_no', )
+        read_only_fields = ('phone_no',)
 
     def update(self, instance: Scout, validated_data):
         user_data = validated_data.pop('user', None)
@@ -52,7 +56,7 @@ class ScoutSerializer(serializers.ModelSerializer):
 
         if permanent_address_data:
             permanent_address_serializer = ScoutPermanentAddressSerializer()
-            super(ScoutPermanentAddressSerializer, permanent_address_serializer)\
+            super(ScoutPermanentAddressSerializer, permanent_address_serializer) \
                 .update(instance.permanent_address, permanent_address_data)
 
         if work_address_data:
@@ -75,4 +79,26 @@ class ScoutDocumentSerializer(serializers.ModelSerializer):
 class ScoutPictureSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScoutPicture
-        fields = ('image', )
+        fields = ('image',)
+
+
+class ScheduledAvailabilitySerializer(serializers.ModelSerializer):
+    start_time = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT, input_formats=[DATETIME_SERIALIZER_FORMAT], )
+    end_time = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT, input_formats=[DATETIME_SERIALIZER_FORMAT])
+
+    class Meta:
+        model = ScheduledAvailability
+        exclude = ('cancelled', 'created_at', 'updated_at',)
+        read_only_fields = ('scout',)
+
+    def validate(self, data):
+        """
+        Check the validity of start and end time
+        """
+        if data.get('start_time') and data['start_time'] < timezone.now():
+            raise serializers.ValidationError("start time should be greater than current time")
+        elif data.get('end_time') and data['end_time'] < timezone.now():
+            raise serializers.ValidationError("end time should be greater than current time")
+        elif data.get('start_time') and data.get('end_time') and data['start_time'] > data['end_time']:
+            raise serializers.ValidationError("end time must occur after start time")
+        return data

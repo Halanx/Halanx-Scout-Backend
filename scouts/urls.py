@@ -11,4 +11,7 @@ urlpatterns = (
     url(r'^$', views.ScoutRetrieveUpdateView.as_view()),
     url(r'^pictures/$', views.ScoutPictureCreateView.as_view()),
     url(r'^documents/$', views.ScoutDocumentListCreateView.as_view()),
+
+    url(r'^scheduled_availability/$', views.ScheduledAvailabilityListCreateView.as_view()),
+    url(r'^scheduled_availability/(?P<pk>\d+)/$', views.ScheduledAvailabilityRetrieveUpdateDestroyView.as_view()),
 )
