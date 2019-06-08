@@ -1,6 +1,8 @@
 from django.db import models
+from django.utils.html import format_html
 
-from common.utils import DocumentTypeCategories
+from common.utils import DocumentTypeCategories, get_notification_category_image_upload_path
+from jsonfield import JSONField
 
 
 class Document(models.Model):
@@ -73,3 +75,48 @@ class Wallet(models.Model):
     def save(self, *args, **kwargs):
         self.balance = round(self.credit - self.debit, 2)
         super(Wallet, self).save(*args, **kwargs)
+
+
+class NotificationCategory(models.Model):
+    name = models.CharField(max_length=250)
+    image = models.ImageField(upload_to=get_notification_category_image_upload_path, null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if self.id is None:
+            saved_image = self.image
+            self.image = None
+            super(NotificationCategory, self).save(*args, **kwargs)
+            self.image = saved_image
+            if 'force_insert' in kwargs:
+                kwargs.pop('force_insert')
+        super(NotificationCategory, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.name)
+
+    def get_notification_category_image_html(self):
+        if self.image:
+            return format_html('<img src="{}" width="50" height="50" />'.format(self.image.url))
+        else:
+            return None
+
+    get_notification_category_image_html.short_description = 'Notification Category Image'
+    get_notification_category_image_html.allow_tags = True
+
+
+class Notification(models.Model):
+    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+    content = models.TextField(max_length=200, blank=True, null=True)
+    payload = JSONField(blank=True, null=True)
+    seen = models.BooleanField(default=False)
+    display = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True
+        ordering = ('-timestamp',)
+
+    def __str__(self):
+        return str(self.id)
