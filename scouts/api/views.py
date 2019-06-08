@@ -9,7 +9,7 @@ from rest_framework.authentication import BasicAuthentication, TokenAuthenticati
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView, \
-    RetrieveUpdateDestroyAPIView
+    RetrieveUpdateDestroyAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -131,10 +131,10 @@ class ScoutDocumentListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         scout = get_object_or_404(Scout, user=self.request.user)
-        documents = scout.documents.order_by('-id')
+        documents = scout.documents.filter(is_deleted=False).order_by('-id')
         latest_documents = []
         for doc_type in list(zip(*DocumentTypeCategories))[0]:
-            latest_documents.append(documents.filter(type=doc_type).first())
+            latest_documents.extend(documents.filter(type=doc_type)[:2])
         return list(filter(lambda x: x is not None, latest_documents))
 
     def create(self, request, *args, **kwargs):
@@ -144,6 +144,17 @@ class ScoutDocumentListCreateView(ListCreateAPIView):
             serializer.save(scout=scout)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ScoutDocumentDestroyView(DestroyAPIView):
+    queryset = ScoutDocument.objects.all()
+
+    def get_object(self):
+        return get_object_or_404(ScoutDocument, pk=self.kwargs.get('pk'), is_deleted=False)
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save()
 
 
 class ScheduledAvailabilityListCreateView(ListCreateAPIView):
