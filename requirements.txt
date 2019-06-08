@@ -1,3 +1,4 @@
+geopy
 amqp==2.5.0
 backcall==0.1.0
 billiard==3.6.0.0

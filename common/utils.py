@@ -22,3 +22,6 @@ PaymentTypeCategories = (
     (WITHDRAWAL, "Withdrawal"),
     (DEPOSIT, "Deposit")
 )
+
+
+DATETIME_SERIALIZER_FORMAT = '%d %B %Y %I:%M %p'

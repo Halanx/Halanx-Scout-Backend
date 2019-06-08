@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
 
+    'Homes.Houses',
     'scouts',
 ]
 
