@@ -9,14 +9,14 @@ from rest_framework.authentication import BasicAuthentication, TokenAuthenticati
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView, \
-    RetrieveUpdateDestroyAPIView, DestroyAPIView
+    RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from common.utils import DocumentTypeCategories, DATETIME_SERIALIZER_FORMAT
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
-    ScheduledAvailabilitySerializer
-from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability
+    ScheduledAvailabilitySerializer, ScoutNotificationSerializer
+from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification
 from utility.sms_utils import send_sms
 
 
@@ -192,3 +192,15 @@ class ScheduledAvailabilityRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIVie
     def perform_destroy(self, instance):
         instance.cancelled = True
         instance.save()
+
+
+class ScoutNotificationListView(ListAPIView):
+    serializer_class = ScoutNotificationSerializer
+    queryset = ScoutNotification.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        scout = get_object_or_404(Scout, user=self.request.user)
+        queryset = scout.notifications.order_by('-timestamp').all()[:30]
+        data = self.get_serializer(queryset, many=True).data
+        scout.notifications.all().update(seen=True)
+        return Response(data, status=status.HTTP_200_OK)

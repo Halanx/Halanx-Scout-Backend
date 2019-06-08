@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from scouts.models import ScoutPermanentAddress, ScoutBankDetail, ScoutWallet, ScoutWorkAddress, ScoutPicture, Scout, \
-    ScoutPayment, ScoutDocument
+    ScoutPayment, ScoutDocument, ScoutNotificationCategory, ScoutNotification
 
 
 class ScoutPermanentAddressInline(admin.StackedInline):
@@ -62,3 +62,16 @@ class ScoutPaymentAdmin(admin.ModelAdmin):
 @admin.register(ScoutWallet)
 class ScoutWalletAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(ScoutNotificationCategory)
+class ScoutNotificationCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'get_notification_category_image_html')
+    readonly_fields = ('get_notification_category_image_html', )
+
+
+@admin.register(ScoutNotification)
+class ScoutNotificationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'scout', 'category', 'content', 'get_notification_image_html', )
+    search_fields = ('scout__first_name', 'scout__phone_no', )
+    list_filter = ('category', )

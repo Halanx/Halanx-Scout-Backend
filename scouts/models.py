@@ -6,7 +6,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.html import format_html
 
-from common.models import AddressDetail, BankDetail, Wallet, Document
+from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
 from common.utils import PaymentStatusCategories, PENDING, PAID
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path
@@ -25,7 +25,7 @@ class Scout(models.Model):
                                                  default=default_profile_pic_thumbnail_url)
 
     def __str__(self):
-        return str(self.id)
+        return "{}:{}".format(self.id, self.phone_no)
 
     @property
     def name(self):
@@ -103,9 +103,15 @@ class ScoutDocument(Document):
     def save(self, *args, **kwargs):
         if self.id is None:
             temp_name, output, thumbnail = compress_image(self.image, quality=90, _create_thumbnail=True)
+            self.image = None
+            self.thumbnail = None
+            super(ScoutDocument, self).save(*args, **kwargs)
             self.image.save(temp_name, content=ContentFile(output.getvalue()), save=False)
             self.thumbnail.save(temp_name, content=ContentFile(thumbnail.getvalue()), save=False)
-        super(ScoutDocument, self).save(*args, **kwargs)        
+            if 'force_insert' in kwargs:
+                kwargs.pop('force_insert')
+
+        super(ScoutDocument, self).save(*args, **kwargs)
 
         
 class OTP(models.Model):
@@ -115,6 +121,26 @@ class OTP(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class ScoutNotificationCategory(NotificationCategory):
+    class Meta:
+        verbose_name_plural = 'Scout notification categories'
+
+
+class ScoutNotification(Notification):
+    scout = models.ForeignKey('Scout', on_delete=models.CASCADE, related_name='notifications')
+    category = models.ForeignKey('ScoutNotificationCategory', on_delete=models.SET_NULL, null=True,
+                                 related_name='notifications')
+
+    def get_notification_image_html(self):
+        if self.category and self.category.image:
+            return format_html('<img src="{}" width="50" height="50" />'.format(self.category.image.url))
+        else:
+            return None
+
+    get_notification_image_html.short_description = 'Notification Image'
+    get_notification_image_html.allow_tags = True
 
 
 class ScheduledAvailability(models.Model):

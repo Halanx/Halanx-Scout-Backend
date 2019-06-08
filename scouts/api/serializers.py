@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
-    ScheduledAvailability
+    ScheduledAvailability, ScoutNotification, ScoutNotificationCategory
 from utility.serializers import DateTimeFieldTZ
 
 
@@ -83,7 +83,7 @@ class ScoutPictureSerializer(serializers.ModelSerializer):
 
 
 class ScheduledAvailabilitySerializer(serializers.ModelSerializer):
-    start_time = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT, input_formats=[DATETIME_SERIALIZER_FORMAT], )
+    start_time = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT, input_formats=[DATETIME_SERIALIZER_FORMAT])
     end_time = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT, input_formats=[DATETIME_SERIALIZER_FORMAT])
 
     class Meta:
@@ -102,3 +102,19 @@ class ScheduledAvailabilitySerializer(serializers.ModelSerializer):
         elif data.get('start_time') and data.get('end_time') and data['start_time'] > data['end_time']:
             raise serializers.ValidationError("end time must occur after start time")
         return data
+
+
+class ScoutNotificationCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoutNotificationCategory
+        fields = '__all__'
+
+
+class ScoutNotificationSerializer(serializers.ModelSerializer):
+    timestamp = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
+    category = ScoutNotificationCategorySerializer()
+
+    class Meta:
+        model = ScoutNotification
+        fields = '__all__'
+

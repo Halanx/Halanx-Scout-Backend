@@ -15,4 +15,6 @@ urlpatterns = (
 
     url(r'^scheduled_availability/$', views.ScheduledAvailabilityListCreateView.as_view()),
     url(r'^scheduled_availability/(?P<pk>\d+)/$', views.ScheduledAvailabilityRetrieveUpdateDestroyView.as_view()),
+
+    url(r'^notifications/$', views.ScoutNotificationListView.as_view()),
 )
