@@ -4,10 +4,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
+from scouts.api.views import ChangePasswordView
 from utility.environments import DEVELOPMENT
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    url(r'^rest-auth/password/change/$', ChangePasswordView.as_view()),
     url(r'^rest-auth/', include('rest_auth.urls')),
     url(r'^accounts/', include('allauth.urls')),
 

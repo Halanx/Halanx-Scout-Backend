@@ -14,6 +14,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'first_name', 'last_name', 'email')
 
 
+# noinspection PyAbstractClass
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+
 class ScoutPermanentAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScoutPermanentAddress

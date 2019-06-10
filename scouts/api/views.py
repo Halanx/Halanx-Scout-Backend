@@ -8,14 +8,15 @@ from rest_framework import status
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView, \
-    RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView
+    RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from common.utils import DocumentTypeCategories, DATETIME_SERIALIZER_FORMAT
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
-    ScheduledAvailabilitySerializer, ScoutNotificationSerializer
+    ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification
 from utility.sms_utils import send_sms
 
@@ -98,6 +99,29 @@ def login_with_otp(request):
         return Response({"key": token.key}, status=status.HTTP_200_OK)
     else:
         return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    model = User
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [BasicAuthentication, TokenAuthentication]
+
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            if not user.check_password(serializer.data.get("old_password")):
+                msg = "Wrong old password."
+                raise ValidationError(msg)
+
+            user.set_password(serializer.data.get("new_password"))
+            user.save()
+            return Response({'detail': "success"}, status=status.HTTP_200_OK)
+
+        msg = 'Something went wrong while reading the passwords'
+        raise ValidationError(msg)
 
 
 class ScoutRetrieveUpdateView(RetrieveUpdateAPIView):
