@@ -10,15 +10,22 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView, \
-    RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView, UpdateAPIView
+    RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from common.utils import DocumentTypeCategories, DATETIME_SERIALIZER_FORMAT
+from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
-    ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer
-from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification
+    ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
+    ScoutPaymentSerializer
+from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
+    ScoutWallet, ScoutPayment
 from utility.sms_utils import send_sms
+
+
+class AuthenticatedRequestMixin(object):
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [BasicAuthentication, TokenAuthentication]
 
 
 @api_view(['POST'])
@@ -101,11 +108,9 @@ def login_with_otp(request):
         return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ChangePasswordView(UpdateAPIView):
+class ChangePasswordView(AuthenticatedRequestMixin, UpdateAPIView):
     serializer_class = ChangePasswordSerializer
     model = User
-    permission_classes = [IsAuthenticated, ]
-    authentication_classes = [BasicAuthentication, TokenAuthentication]
 
     def update(self, request, *args, **kwargs):
         """
@@ -142,21 +147,17 @@ class ChangePasswordView(UpdateAPIView):
         raise ValidationError(msg)
 
 
-class ScoutRetrieveUpdateView(RetrieveUpdateAPIView):
+class ScoutRetrieveUpdateView(AuthenticatedRequestMixin, RetrieveUpdateAPIView):
     serializer_class = ScoutSerializer
     queryset = Scout.objects.all()
-    permission_classes = [IsAuthenticated, ]
-    authentication_classes = [BasicAuthentication, TokenAuthentication]
 
     def get_object(self):
         return get_object_or_404(Scout, user=self.request.user)
 
 
-class ScoutPictureCreateView(CreateAPIView):
+class ScoutPictureCreateView(AuthenticatedRequestMixin, CreateAPIView):
     serializer_class = ScoutPictureSerializer
     queryset = ScoutPicture.objects.all()
-    permission_classes = [IsAuthenticated, ]
-    authentication_classes = [BasicAuthentication, TokenAuthentication]
 
     def create(self, request, *args, **kwargs):
         scout = get_object_or_404(Scout, user=request.user)
@@ -167,7 +168,7 @@ class ScoutPictureCreateView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ScoutDocumentListCreateView(ListCreateAPIView):
+class ScoutDocumentListCreateView(AuthenticatedRequestMixin, ListCreateAPIView):
     serializer_class = ScoutDocumentSerializer
     queryset = ScoutDocument.objects.all()
 
@@ -184,7 +185,7 @@ class ScoutDocumentListCreateView(ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ScoutDocumentDestroyView(DestroyAPIView):
+class ScoutDocumentDestroyView(AuthenticatedRequestMixin, DestroyAPIView):
     queryset = ScoutDocument.objects.all()
 
     def get_object(self):
@@ -195,7 +196,7 @@ class ScoutDocumentDestroyView(DestroyAPIView):
         instance.save()
 
 
-class ScheduledAvailabilityListCreateView(ListCreateAPIView):
+class ScheduledAvailabilityListCreateView(AuthenticatedRequestMixin, ListCreateAPIView):
     serializer_class = ScheduledAvailabilitySerializer
     queryset = ScheduledAvailability.objects.all()
 
@@ -219,7 +220,7 @@ class ScheduledAvailabilityListCreateView(ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ScheduledAvailabilityRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+class ScheduledAvailabilityRetrieveUpdateDestroyView(AuthenticatedRequestMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = ScheduledAvailabilitySerializer
     queryset = ScheduledAvailability.objects.all()
 
@@ -232,7 +233,7 @@ class ScheduledAvailabilityRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIVie
         instance.save()
 
 
-class ScoutNotificationListView(ListAPIView):
+class ScoutNotificationListView(AuthenticatedRequestMixin, ListAPIView):
     serializer_class = ScoutNotificationSerializer
     queryset = ScoutNotification.objects.all()
 
@@ -242,3 +243,24 @@ class ScoutNotificationListView(ListAPIView):
         data = self.get_serializer(queryset, many=True).data
         scout.notifications.all().update(seen=True)
         return Response(data, status=status.HTTP_200_OK)
+
+
+class ScoutWalletRetrieveView(AuthenticatedRequestMixin, RetrieveAPIView):
+    serializer_class = ScoutWalletSerializer
+    queryset = ScoutWallet.objects.all()
+
+    def get_object(self):
+        return get_object_or_404(ScoutWallet, scout__user=self.request.user)
+
+
+class ScoutPaymentListView(AuthenticatedRequestMixin, ListAPIView):
+    serializer_class = ScoutPaymentSerializer
+    queryset = ScoutPayment.objects.all()
+
+    def get_queryset(self):
+        wallet = get_object_or_404(ScoutWallet, scout__user=self.request.user)
+        payments = wallet.payments.all().order_by('-timestamp')
+        payment_status = self.request.GET.get('status')
+        if payment_status in [PAID, PENDING]:
+            payments = payments.filter(status=payment_status)
+        return payments

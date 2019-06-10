@@ -57,6 +57,7 @@ class ScoutAdmin(admin.ModelAdmin):
 @admin.register(ScoutPayment)
 class ScoutPaymentAdmin(admin.ModelAdmin):
     list_display = ('id', 'wallet', 'amount', 'status', 'due_date', 'paid_on')
+    raw_id_fields = ('wallet', )
 
 
 @admin.register(ScoutWallet)

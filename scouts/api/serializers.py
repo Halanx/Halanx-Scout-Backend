@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
-    ScheduledAvailability, ScoutNotification, ScoutNotificationCategory
+    ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment
 from utility.serializers import DateTimeFieldTZ
 
 
@@ -126,3 +126,16 @@ class ScoutNotificationSerializer(serializers.ModelSerializer):
         model = ScoutNotification
         fields = '__all__'
 
+
+class ScoutWalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoutWallet
+        fields = ('credit', 'pending_withdrawal', 'debit')
+
+
+class ScoutPaymentSerializer(serializers.ModelSerializer):
+    paid_on = serializers.DateTimeField(format='%d %B, %Y')
+
+    class Meta:
+        model = ScoutPayment
+        exclude = ('due_date', 'timestamp', 'updated')

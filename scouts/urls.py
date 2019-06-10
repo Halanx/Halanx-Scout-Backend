@@ -17,4 +17,7 @@ urlpatterns = (
     url(r'^scheduled_availability/(?P<pk>\d+)/$', views.ScheduledAvailabilityRetrieveUpdateDestroyView.as_view()),
 
     url(r'^notifications/$', views.ScoutNotificationListView.as_view()),
+
+    url(r'^wallet/$', views.ScoutWalletRetrieveView.as_view()),
+    url(r'^payments/$', views.ScoutPaymentListView.as_view()),
 )
