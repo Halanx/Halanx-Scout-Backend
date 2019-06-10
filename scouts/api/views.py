@@ -112,15 +112,30 @@ class ChangePasswordView(UpdateAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            if not user.check_password(serializer.data.get("old_password")):
+            otp = serializer.data.get("otp")
+            old_password = serializer.data.get("old_password")
+            new_password = serializer.data.get("new_password")
+
+            if not old_password and not otp:
+                msg = "Require either old password or otp"
+                raise ValidationError(msg)
+
+            if old_password and not user.check_password(old_password):
                 msg = "Wrong old password."
                 raise ValidationError(msg)
 
-            user.set_password(serializer.data.get("new_password"))
+            if otp:
+                scout = get_object_or_404(Scout, user=request.user)
+                otp = get_object_or_404(OTP, phone_no=scout.phone_no, password=otp)
+                if not otp.timestamp >= timezone.now() - timedelta(minutes=10):
+                    msg = "OTP has expired"
+                    raise ValidationError(msg)
+
+            user.set_password(new_password)
             user.save()
             return Response({'detail': "success"}, status=status.HTTP_200_OK)
 
-        msg = 'Something went wrong while reading the passwords'
+        msg = serializer.errors
         raise ValidationError(msg)
 
 

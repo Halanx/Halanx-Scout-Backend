@@ -16,7 +16,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 # noinspection PyAbstractClass
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
+    otp = serializers.CharField(required=True, allow_null=True)
+    old_password = serializers.CharField(required=True, allow_null=True)
     new_password = serializers.CharField(required=True)
 
 
