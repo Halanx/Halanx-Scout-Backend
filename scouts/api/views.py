@@ -108,6 +108,9 @@ class ChangePasswordView(UpdateAPIView):
     authentication_classes = [BasicAuthentication, TokenAuthentication]
 
     def update(self, request, *args, **kwargs):
+        """
+        change password of scout either by old password or otp
+        """
         user = request.user
         serializer = self.get_serializer(data=request.data)
 
@@ -170,11 +173,7 @@ class ScoutDocumentListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         scout = get_object_or_404(Scout, user=self.request.user)
-        documents = scout.documents.filter(is_deleted=False).order_by('-id')
-        latest_documents = []
-        for doc_type in list(zip(*DocumentTypeCategories))[0]:
-            latest_documents.extend(documents.filter(type=doc_type)[:2])
-        return list(filter(lambda x: x is not None, latest_documents))
+        return scout.latest_documents
 
     def create(self, request, *args, **kwargs):
         scout = get_object_or_404(Scout, user=request.user)

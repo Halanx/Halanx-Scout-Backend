@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.utils.html import format_html
 
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
-from common.utils import PaymentStatusCategories, PENDING, PAID
+from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path
 from utility.image_utils import compress_image
@@ -30,6 +30,22 @@ class Scout(models.Model):
     @property
     def name(self):
         return self.user.get_full_name()
+
+    @property
+    def latest_documents(self):
+        documents = self.documents.filter(is_deleted=False).order_by('-id')
+        latest_documents = []
+        for doc_type in list(zip(*DocumentTypeCategories))[0]:
+            latest_documents.extend(documents.filter(type=doc_type)[:2])
+        return list(filter(lambda x: x is not None, latest_documents))
+
+    @property
+    def document_submission_complete(self):
+        documents = self.documents.filter(is_deleted=False)
+        counts = []
+        for doc_type in list(zip(*DocumentTypeCategories))[0]:
+            counts.append(documents.filter(type=doc_type).count())
+        return all(counts)
 
     def get_profile_pic_html(self):
         return format_html('<img src="{}" width="50" height="50" />'.format(self.profile_pic_url))
@@ -113,7 +129,7 @@ class ScoutDocument(Document):
 
         super(ScoutDocument, self).save(*args, **kwargs)
 
-        
+
 class OTP(models.Model):
     phone_no = models.CharField(max_length=30)
     password = models.IntegerField(null=True, blank=True)
