@@ -1,7 +1,3 @@
-from datetime import timedelta, datetime, time
-
-from django.utils import timezone
-
 APARTMENT = 'apartment'
 INDEPENDENT = 'independent'
 VILLA = 'villa'
@@ -116,21 +112,6 @@ def get_amenity_picture_upload_path(instance, filename):
 
 def get_sub_amenity_picture_upload_path(instance, filename):
     return "SubAmenity/{}.{}".format(instance.name, filename.split('.')[-1])
-
-
-# noinspection PyUnusedLocal
-def get_house_visit_time_slots(house):
-    now = timezone.now()
-    slot_hours = [10, 12, 14, 16, 18]
-    days = [(now + timedelta(days=x)).date() for x in range(7)]
-    time_slots = [{"date": day,
-                   "time": list(map(lambda x: x.time(),
-                                    (filter(lambda x: x > now + timedelta(hours=2),
-                                            [timezone.make_aware(datetime.combine(day, time(hour)))
-                                             for hour in slot_hours]))))} for day in days]
-    if len(time_slots[0]['time']) is 0:
-        time_slots.pop(0)
-    return time_slots
 
 
 def generate_accomodation_allowed_str(accomodation_allowed):

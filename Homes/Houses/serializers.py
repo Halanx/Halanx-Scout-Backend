@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from Homes.Houses.models import HouseAddressDetail, House
+from Homes.Houses.models import HouseAddressDetail, House, Space
 
 
 class HouseAddressDetailSerializer(serializers.ModelSerializer):
@@ -15,3 +15,11 @@ class HouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = House
         fields = ('id', 'name', 'address', 'cover_pic_url')
+
+
+class SpaceSerializer(serializers.ModelSerializer):
+    house = HouseSerializer()
+
+    class Meta:
+        model = Space
+        fields = ('id', 'name', 'house')

@@ -21,7 +21,11 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
 
+    'UserBase',
     'Homes.Houses',
+    'Homes.Tenants',
+    'Homes.Bookings',
+
     'scouts',
 ]
 
@@ -97,3 +101,6 @@ ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_USERNAME_REQUIRED = False
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+HOMES_DB = 'homes'

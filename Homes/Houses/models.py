@@ -193,8 +193,7 @@ class HousePicture(models.Model):
 
 class HouseVisit(models.Model):
     house = models.ForeignKey('House', on_delete=models.SET_NULL, null=True, related_name='visits')
-    # customer = models.ForeignKey('UserBase.Customer', on_delete=models.SET_NULL, null=True,
-    # related_name='house_visits')
+    customer = models.ForeignKey('UserBase.Customer', on_delete=models.SET_NULL, null=True, related_name='house_visits')
     code = models.CharField(max_length=10, blank=True, null=True)
     scheduled_visit_time = models.DateTimeField(blank=True, null=True)
 
