@@ -17,9 +17,10 @@ from rest_framework.response import Response
 from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
-    ScoutPaymentSerializer
+    ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
-    ScoutWallet, ScoutPayment
+    ScoutWallet, ScoutPayment, ScoutTask
+from scouts.utils import ASSIGNED
 from utility.sms_utils import send_sms
 
 
@@ -264,3 +265,26 @@ class ScoutPaymentListView(AuthenticatedRequestMixin, ListAPIView):
         if payment_status in [PAID, PENDING]:
             payments = payments.filter(status=payment_status)
         return payments
+
+
+class ScoutTaskListView(AuthenticatedRequestMixin, ListAPIView):
+    serializer_class = ScoutTaskListSerializer
+    queryset = ScoutTask.objects.all()
+
+    def get_queryset(self):
+        scout = get_object_or_404(Scout, user=self.request.user)
+        return scout.tasks.filter(status=ASSIGNED).order_by('scheduled_at')
+
+
+class ScoutTaskRetrieveUpdateDestroyAPIView(AuthenticatedRequestMixin, RetrieveUpdateDestroyAPIView):
+    serializer_class = ScoutTaskDetailSerializer
+    queryset = ScoutTask.objects.all()
+
+    def get_object(self):
+        return get_object_or_404(ScoutTask, pk=self.kwargs.get('pk'), scout__user=self.request.user)
+
+    def perform_destroy(self, instance):
+        task = self.get_object()
+        task.cancelled_by.add(task.scout)
+        task.scout = None
+        task.save()

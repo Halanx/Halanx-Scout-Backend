@@ -1,7 +1,8 @@
 from django.contrib import admin
 
 from scouts.models import ScoutPermanentAddress, ScoutBankDetail, ScoutWallet, ScoutWorkAddress, ScoutPicture, Scout, \
-    ScoutPayment, ScoutDocument, ScoutNotificationCategory, ScoutNotification
+    ScoutPayment, ScoutDocument, ScoutNotificationCategory, ScoutNotification, ScoutTaskCategory, ScoutSubTaskCategory, \
+    ScoutTaskReviewTagCategory, ScoutTask
 
 
 class ScoutPermanentAddressInline(admin.StackedInline):
@@ -76,3 +77,36 @@ class ScoutNotificationAdmin(admin.ModelAdmin):
     list_display = ('id', 'scout', 'category', 'content', 'get_notification_image_html', )
     search_fields = ('scout__first_name', 'scout__phone_no', )
     list_filter = ('category', )
+
+
+@admin.register(ScoutTaskCategory)
+class ScoutTaskCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'get_scout_task_category_image_html')
+    readonly_fields = ('get_scout_task_category_image_html',)
+
+
+@admin.register(ScoutSubTaskCategory)
+class ScoutSubTaskCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'task_category', 'position')
+
+
+@admin.register(ScoutTaskReviewTagCategory)
+class ScoutTaskReviewTagCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', )
+
+
+class ScoutSubTaskCategoryInline(admin.StackedInline):
+    model = ScoutSubTaskCategory
+    extra = 0
+
+
+class ScoutTaskReviewTagCategoryInline(admin.StackedInline):
+    model = ScoutTaskReviewTagCategory
+    extra = 0
+
+
+@admin.register(ScoutTask)
+class ScoutTaskAdmin(admin.ModelAdmin):
+    list_display = ('id', 'scout', 'category', 'status', 'earning')
+    filter_horizontal = ('sub_tasks', 'review_tags',)
+    raw_id_fields = ('scout', )

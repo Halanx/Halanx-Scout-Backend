@@ -20,4 +20,7 @@ urlpatterns = (
 
     url(r'^wallet/$', views.ScoutWalletRetrieveView.as_view()),
     url(r'^payments/$', views.ScoutPaymentListView.as_view()),
+
+    url(r'^tasks/$', views.ScoutTaskListView.as_view()),
+    url(r'^tasks/(?P<pk>\d+)/$', views.ScoutTaskRetrieveUpdateDestroyAPIView.as_view()),
 )

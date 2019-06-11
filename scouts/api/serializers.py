@@ -1,10 +1,14 @@
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework import serializers
 
+from Homes.Houses.models import House
+from Homes.Houses.serializers import HouseSerializer
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
-    ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment
+    ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment, ScoutTask, \
+    ScoutTaskCategory, ScoutSubTaskCategory
 from utility.serializers import DateTimeFieldTZ
 
 
@@ -139,3 +143,39 @@ class ScoutPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScoutPayment
         exclude = ('due_date', 'timestamp', 'updated')
+
+
+class ScoutTaskCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoutTaskCategory
+        fields = '__all__'
+
+
+class ScoutSubTaskCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoutSubTaskCategory
+        fields = ('name', )
+
+
+class ScoutTaskListSerializer(serializers.ModelSerializer):
+    scheduled_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
+    category = ScoutTaskCategorySerializer()
+    house = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ScoutTask
+        fields = ('id', 'scout', 'category', 'earning', 'scheduled_at', 'house')
+
+    @staticmethod
+    def get_house(obj):
+        house = House.objects.using(settings.HOMES_DB).filter(id=obj.house_id).first()
+        if house:
+            return HouseSerializer(house).data
+
+
+class ScoutTaskDetailSerializer(ScoutTaskListSerializer):
+    sub_tasks = ScoutSubTaskCategorySerializer(many=True)
+
+    class Meta:
+        model = ScoutTask
+        fields = ScoutTaskListSerializer.Meta.fields + ('sub_tasks', 'review_tags', 'remark')

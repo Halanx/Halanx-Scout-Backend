@@ -9,7 +9,8 @@ from django.utils.html import format_html
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
-    get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path
+    get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
+    get_scout_task_category_image_upload_path, ScoutTaskStatusCategories
 from utility.image_utils import compress_image
 
 
@@ -166,6 +167,88 @@ class ScheduledAvailability(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     cancelled = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ScoutTaskCategory(models.Model):
+    name = models.CharField(max_length=255)
+    image = models.ImageField(upload_to=get_scout_task_category_image_upload_path, null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = 'Scout task categories'
+
+    def __str__(self):
+        return str(self.name)
+
+    def save(self, *args, **kwargs):
+        if self.id is None:
+            saved_image = self.image
+            self.image = None
+            super(ScoutTaskCategory, self).save(*args, **kwargs)
+            self.image = saved_image
+            if 'force_insert' in kwargs:
+                kwargs.pop('force_insert')
+        super(ScoutTaskCategory, self).save(*args, **kwargs)
+
+    def get_scout_task_category_image_html(self):
+        if self.image:
+            return format_html('<img src="{}" width="50" height="50" />'.format(self.image.url))
+        else:
+            return None
+
+    get_scout_task_category_image_html.short_description = 'category Image'
+    get_scout_task_category_image_html.allow_tags = True
+
+
+class ScoutSubTaskCategory(models.Model):
+    name = models.CharField(max_length=255)
+    task_category = models.ForeignKey('ScoutTaskCategory', on_delete=models.SET_NULL, null=True,
+                                      related_name='sub_task_categories')
+    position = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        verbose_name_plural = 'Scout sub task categories'
+        ordering = ('position',)
+
+    def __str__(self):
+        return str(self.name)
+
+
+class ScoutTaskReviewTagCategory(models.Model):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = 'Scout task review status categories'
+
+    def __str__(self):
+        return str(self.name)
+
+
+class ScoutTask(models.Model):
+    scout = models.ForeignKey('Scout', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
+    cancelled_by = models.ManyToManyField('Scout', blank=True)
+    category = models.ForeignKey('ScoutTaskCategory', on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='tasks')
+    sub_tasks = models.ManyToManyField('ScoutSubTaskCategory', blank=True)
+    status = models.CharField(max_length=50, choices=ScoutTaskStatusCategories)
+    earning = models.FloatField(default=0)
+
+    house_id = models.PositiveIntegerField(blank=True, null=True)
+    visit_id = models.PositiveIntegerField(blank=True, null=True)
+    booking_id = models.PositiveIntegerField(blank=True, null=True)
+
+    scheduled_at = models.DateTimeField(blank=True, null=True)
+    assigned_at = models.DateTimeField(blank=True, null=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    rating = models.PositiveIntegerField(default=0)
+    remark = models.TextField(blank=True, null=True)
+    review_tags = models.ManyToManyField('ScoutTaskReviewTagCategory', blank=True)
+    payment = models.ForeignKey('ScoutPayment', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
 
     def __str__(self):
         return str(self.id)
