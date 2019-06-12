@@ -20,8 +20,6 @@ def check_whether_logged_in_participant_belongs_to_this_conversation(conv, parti
 def get_participant_from_user(current_user):
     """It finds the participation object from the current user"""
 
-    # TODO Retrieve actual Participant from the user
-
     return current_user.participant
 
 
@@ -57,6 +55,7 @@ class ChatConsumer(WebsocketConsumer):
                 self.channel_name
             )
 
+            # Accept Connection
             self.accept()
 
     def disconnect(self, close_code):

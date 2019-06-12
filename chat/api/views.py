@@ -30,6 +30,7 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 @api_view(("POST",))
 @authentication_classes((CsrfExemptSessionAuthentication, BasicAuthentication, TokenAuthentication))
 def login_api(request):
+    """API to login a user with username and password"""
     _errors = {}
     error_occured = False
 
@@ -71,6 +72,7 @@ def get_logged_in_user(request):
 
 
 class ConversationListAPIView(ListAPIView):
+    """It displays the list of conversations of logged in user"""
     serializer_class = ConversationListSerializer
     permission_classes = [IsAuthenticated, ]
 
@@ -79,6 +81,7 @@ class ConversationListAPIView(ListAPIView):
 
 
 class MessageListCreateAPIView(ListCreateAPIView):
+    """It displays the list of messages of logged in user of given conversation"""
     serializer_class = MessageListCreateSerializer
     permission_classes = [IsAuthenticated, ]
 
