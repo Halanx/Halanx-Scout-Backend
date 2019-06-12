@@ -4,7 +4,7 @@ import json
 
 from rest_framework.generics import get_object_or_404
 
-from chat.models import Conversation, Participant
+from chat.models import Conversation, Participant, Message
 
 
 # Authentication https://channels.readthedocs.io/en/latest/topics/authentication.html#
@@ -36,13 +36,14 @@ class ChatConsumer(WebsocketConsumer):
         #  specified room name in kwargs of web socket url
         conv = get_object_or_404(Conversation, chat_room_name=room_name)
 
+        participant = get_participant_from_user(current_user)
         # This checks whether the currently logged in participant belongs to this conversation
-        access_status = check_whether_logged_in_participant_belongs_to_this_conversation(conv,
-                                                                                         get_participant_from_user(
-                                                                                             current_user))
+        access_status = check_whether_logged_in_participant_belongs_to_this_conversation(conv, participant)
 
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
+        self.conv = conv
+        self.participant = participant
 
         print("room-name:", self.room_name)
         print("group-name:", self.room_group_name)
@@ -72,6 +73,11 @@ class ChatConsumer(WebsocketConsumer):
         message = text_data_json['message']
 
         print("received message from web socket is", message)
+
+        # Create Message in Database
+        Message.objects.create(conversation=self.conv,
+                               sender=self.participant,
+                               content=message)
 
         # Send message to room group
         async_to_sync(self.channel_layer.group_send)(
