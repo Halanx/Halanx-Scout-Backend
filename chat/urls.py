@@ -1,7 +1,8 @@
 from django.conf.urls import url
 
-from chat.api import views
-urlpatterns = (
-    url(r'^conversations/$', views.ConversationListAPIView.as_view()),
-    url(r'^conversations/(?P<pk>\d+)/messages/$', views.MessageListCreateAPIView.as_view()),
-)
+from . import views
+
+urlpatterns = [
+    url(r'^$', views.index, name='index'),
+    url(r'^(?P<room_name>[^/]+)/$', views.room, name='room'),
+]

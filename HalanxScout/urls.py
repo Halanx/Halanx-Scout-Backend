@@ -15,7 +15,9 @@ urlpatterns = [
 
     url(r'^scouts/', include('scouts.urls')),
 
-    url(r'^chat/', include('chat.urls')),
+    url(r'^chat/', include('chat.api.urls')),
+    url(r'^chat/realtime/', include('chat.urls')),
+
 ]
 
 

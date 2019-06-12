@@ -7,7 +7,7 @@ class MessageAdmin(admin.ModelAdmin):
 
 
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type')
+    list_display = ('id', 'type', 'user')
 
 
 admin.site.register(Conversation)
