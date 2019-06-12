@@ -1,11 +1,8 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.utils.safestring import mark_safe
 import json
 
-from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import render
+from django.utils.safestring import mark_safe
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
 
 from chat.models import Conversation, Participant
 
