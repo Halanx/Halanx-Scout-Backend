@@ -10,7 +10,7 @@ class TenantPermanentAddressDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class TenantDetailSerializer(serializers.ModelSerializer):
+class TenantSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer()
     permanent_address = TenantPermanentAddressDetailSerializer()
 

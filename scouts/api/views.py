@@ -1,10 +1,12 @@
 import random
 from datetime import timedelta, datetime
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.utils import timezone
-from rest_framework import status
+from django.utils.translation import ugettext_lazy as _
+from rest_framework import status, exceptions
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
@@ -14,19 +16,35 @@ from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, Cr
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from Homes.Tenants.models import Tenant
+from Homes.Tenants.serializers import TenantSerializer
 from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
     ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
     ScoutWallet, ScoutPayment, ScoutTask
-from scouts.utils import ASSIGNED
+from scouts.utils import ASSIGNED, COMPLETE
 from utility.sms_utils import send_sms
 
 
 class AuthenticatedRequestMixin(object):
     permission_classes = [IsAuthenticated, ]
     authentication_classes = [BasicAuthentication, TokenAuthentication]
+
+
+class TenantAuthentication(TokenAuthentication):
+    def authenticate_credentials(self, key):
+        model = self.get_model()
+        try:
+            token = model.objects.using(settings.HOMES_DB).select_related('user').get(key=key)
+        except model.DoesNotExist:
+            raise exceptions.AuthenticationFailed(_('Invalid token.'))
+
+        if not token.user.is_active:
+            raise exceptions.AuthenticationFailed(_('User inactive or deleted.'))
+
+        return token.user, token
 
 
 @api_view(['POST'])
@@ -281,10 +299,31 @@ class ScoutTaskRetrieveUpdateDestroyAPIView(AuthenticatedRequestMixin, RetrieveU
     queryset = ScoutTask.objects.all()
 
     def get_object(self):
-        return get_object_or_404(ScoutTask, pk=self.kwargs.get('pk'), scout__user=self.request.user)
+        return get_object_or_404(ScoutTask, pk=self.kwargs.get('pk'), scout__user=self.request.user,
+                                 status=ASSIGNED)
+
+    def update(self, request, *args, **kwargs):
+        data = request.POST
+        task = self.get_object()
+        if data.get('complete'):
+            task.status = COMPLETE
+        if data.get('remark'):
+            task.remark = data['remark']
+        task.save()
+        return Response(status=status.HTTP_200_OK)
 
     def perform_destroy(self, instance):
         task = self.get_object()
         task.cancelled_by.add(task.scout)
         task.scout = None
         task.save()
+
+
+class TenantRetrieveView(RetrieveAPIView):
+    serializer_class = TenantSerializer
+    queryset = Tenant.objects.all()
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [TenantAuthentication]
+
+    def get_object(self):
+        return get_object_or_404(Tenant.objects.using(settings.HOMES_DB), customer__user=self.request.user)

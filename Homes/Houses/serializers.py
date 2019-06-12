@@ -18,6 +18,12 @@ class HouseSerializer(serializers.ModelSerializer):
 
 
 class SpaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Space
+        fields = ('id', 'name', 'type')
+
+
+class SpaceDetailSerializer(serializers.ModelSerializer):
     house = HouseSerializer()
 
     class Meta:

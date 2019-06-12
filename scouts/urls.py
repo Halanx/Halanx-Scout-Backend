@@ -23,4 +23,6 @@ urlpatterns = (
 
     url(r'^tasks/$', views.ScoutTaskListView.as_view()),
     url(r'^tasks/(?P<pk>\d+)/$', views.ScoutTaskRetrieveUpdateDestroyAPIView.as_view()),
+
+    url(r'^tenant/$', views.TenantRetrieveView.as_view()),
 )

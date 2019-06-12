@@ -3,8 +3,12 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework import serializers
 
-from Homes.Houses.models import House
-from Homes.Houses.serializers import HouseSerializer
+from Homes.Bookings.models import Booking
+from Homes.Houses.models import House, HouseVisit
+from Homes.Houses.serializers import HouseSerializer, SpaceSerializer
+from Homes.Tenants.models import Tenant
+from Homes.Tenants.serializers import TenantSerializer
+from UserBase.serializers import CustomerSerializer
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
     ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment, ScoutTask, \
@@ -161,16 +165,40 @@ class ScoutTaskListSerializer(serializers.ModelSerializer):
     scheduled_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
     category = ScoutTaskCategorySerializer()
     house = serializers.SerializerMethodField()
+    space = serializers.SerializerMethodField()
+    customer = serializers.SerializerMethodField()
 
     class Meta:
         model = ScoutTask
-        fields = ('id', 'scout', 'category', 'earning', 'scheduled_at', 'house')
+        fields = ('id', 'scout', 'category', 'earning', 'scheduled_at', 'house', 'space', 'customer')
 
     @staticmethod
     def get_house(obj):
         house = House.objects.using(settings.HOMES_DB).filter(id=obj.house_id).first()
         if house:
             return HouseSerializer(house).data
+
+    @staticmethod
+    def get_space(obj):
+        if obj.booking_id:
+            booking = Booking.objects.using(settings.HOMES_DB).filter(id=obj.booking_id).first()
+            if booking:
+                space = booking.space
+                return SpaceSerializer(space).data
+
+    @staticmethod
+    def get_customer(obj):
+        customer = None
+        if obj.visit_id:
+            visit = HouseVisit.objects.using(settings.HOMES_DB).filter(id=obj.visit_id).first()
+            if visit:
+                customer = visit.customer
+        elif obj.booking_id:
+            booking = Booking.objects.using(settings.HOMES_DB).filter(id=obj.booking_id).first()
+            if booking:
+                customer = booking.tenant.customer
+        if customer:
+            return CustomerSerializer(customer).data
 
 
 class ScoutTaskDetailSerializer(ScoutTaskListSerializer):
