@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     'Homes.Bookings',
 
     'scouts',
+
+    'chat',
 ]
 
 MIDDLEWARE = [
