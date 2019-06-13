@@ -6,8 +6,6 @@ from rest_framework import serializers
 from Homes.Bookings.models import Booking
 from Homes.Houses.models import House, HouseVisit
 from Homes.Houses.serializers import HouseSerializer, SpaceSerializer
-from Homes.Tenants.models import Tenant
-from Homes.Tenants.serializers import TenantSerializer
 from UserBase.serializers import CustomerSerializer
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
