@@ -15,7 +15,7 @@ from utility.image_utils import compress_image
 
 
 class Scout(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='scout')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='scout')
     phone_no = models.CharField(max_length=30, unique=True, validators=[RegexValidator('^[+]*\d{10,}$',
                                                                                        message="Phone Number should "
                                                                                                "contain at least 10 "
