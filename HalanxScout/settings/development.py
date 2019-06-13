@@ -2,7 +2,6 @@ from utility.environments import DEVELOPMENT
 from .base import *
 
 DEBUG = True
-
 ALLOWED_HOSTS = ['*']
 
 # Environment Settings
