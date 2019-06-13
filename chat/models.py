@@ -25,7 +25,7 @@ class Participant(models.Model):
 class Conversation(models.Model):
     task = models.OneToOneField("scouts.ScoutTask", on_delete=models.SET_NULL, null=True, blank=True,
                                 related_name="conversation")
-    participants = models.ManyToManyField(Participant, related_name="conversations")
+    participants = models.ManyToManyField("chat.Participant", related_name="conversations")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -34,12 +34,22 @@ class Conversation(models.Model):
 
     @property
     def last_message(self):
-        return self.messages.last()
+        try:
+            return str(self.messages.last().content)
+        except:
+            return None
+
+    @property
+    def last_message_time(self):
+        try:
+            return self.messages.last().created_at.timestamp()
+        except AttributeError:
+            return 0
 
 
 class Message(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, related_name="messages", null=True)
-    sender = models.ForeignKey(Participant, on_delete=models.SET_NULL, related_name="sent_messages", null=True)
+    conversation = models.ForeignKey("chat.Conversation", on_delete=models.SET_NULL, related_name="messages", null=True)
+    sender = models.ForeignKey("chat.Participant", on_delete=models.SET_NULL, related_name="sent_messages", null=True)
     content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
