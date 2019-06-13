@@ -1,8 +1,8 @@
 
-TYPE_SCOUT = "new_participant_scout"
-TYPE_TENANT = "new_participant_tenant"
+TYPE_SCOUT = "participant_scout"
+TYPE_CUSTOMER = "participant_customer"
 
 ParticipantTypeCategories = (
-    (TYPE_SCOUT, 'New Scout'),
-    (TYPE_TENANT, 'New Tenant')
+    (TYPE_SCOUT, 'Scout'),
+    (TYPE_CUSTOMER, 'Customer')
 )
