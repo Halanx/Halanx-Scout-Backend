@@ -51,6 +51,7 @@ class ScoutSerializer(serializers.ModelSerializer):
     work_address = ScoutWorkAddressSerializer()
     bank_detail = ScoutBankDetailSerializer()
     document_submission_complete = serializers.ReadOnlyField()
+    bank_details_complete = serializers.ReadOnlyField()
 
     class Meta:
         model = Scout

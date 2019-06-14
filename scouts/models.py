@@ -48,6 +48,11 @@ class Scout(models.Model):
             counts.append(documents.filter(type=doc_type).count())
         return all(counts)
 
+    @property
+    def bank_details_complete(self):
+        bank_detail = self.bank_detail
+        return all([bank_detail.account_holder_name, bank_detail.account_number, bank_detail.bank_name])
+
     def get_profile_pic_html(self):
         return format_html('<img src="{}" width="50" height="50" />'.format(self.profile_pic_url))
 
