@@ -4,120 +4,89 @@ from rest_framework.exceptions import ValidationError
 
 from UserBase.models import Customer
 from chat.models import Conversation, Message, Participant
+from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, ROLE_SENDER, ROLE_RECEIVER
+from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout
-from utility.timeutils import get_natural_datetime
-
-
-# Scout APIs
-class LastMessageSerializer(serializers.ModelSerializer):
-    created_at = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Message
-        fields = ["id", "content", "created_at"]
-
-    @staticmethod
-    def get_created_at(obj):
-        return get_natural_datetime(obj.created_at)
+from utility.serializers import DateTimeFieldTZ
 
 
 class ScoutDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scout
-        fields = ["id", "name", "profile_pic_url", "profile_pic_thumbnail_url"]
-
-
-class ScoutConversationListSerializer(serializers.ModelSerializer):
-    receiver = serializers.SerializerMethodField()
-    last_message = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Conversation
-        fields = ["id", "receiver", "task", "last_message"]
-
-    def get_receiver(self, obj):
-        customer_participant = obj.participants.exclude(id=self.context["scout_participant_id"])[0]
-        try:
-            return CustomerDetailSerializer(
-                Customer.objects.using(settings.HOMES_DB).get(id=customer_participant.customer_id)).data
-        except Customer.DoesNotExist:
-            raise ValidationError({"detail": "No customer found in homes db"})
-
-    @staticmethod
-    def get_last_message(obj):
-        return LastMessageSerializer(obj.messages.last()).data
+        fields = ("name", "profile_pic_url", "profile_pic_thumbnail_url")
 
 
 class CustomerDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = ["id", "name", "profile_pic_url", "profile_pic_thumbnail_url"]
+        fields = ("name", "profile_pic_url", "profile_pic_thumbnail_url")
+
+
+class ParticipantSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Participant
+        fields = ("id", "profile")
+
+    @staticmethod
+    def get_profile(obj):
+        if obj.type == TYPE_CUSTOMER:
+            return CustomerDetailSerializer(Customer.objects.using(settings.HOMES_DB).get(id=obj.customer_id)).data
+
+        elif obj.type == TYPE_SCOUT:
+            return ScoutDetailSerializer(obj.scout).data
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    created_at = serializers.SerializerMethodField()
+    created_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ["id", "content", "created_at"]
+        fields = ("id", "content", "created_at", "role")
 
-    @staticmethod
-    def get_created_at(obj):
-        return get_natural_datetime(obj.created_at)
-
-
-class ScoutMessageListCreateSerializer(serializers.ModelSerializer):
-    sender = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Message
-        fields = ['id', 'created_at', 'is_read', 'read_at', 'content', "sender"]
-
-    def get_sender(self, obj):
-        scout_participant_id = self.context["scout_participant_id"]
-        print("id is", obj.sender.id)
-        print(scout_participant_id)
-        if obj.sender.id == scout_participant_id:
-            return "self"
-        else:
-            customer_participant = obj.conversation.participants.exclude(id=self.context["scout_participant_id"])[0]
-            return CustomerDetailSerializer(customer_participant).data
+    def get_role(self, obj):
+        if obj.sender.id == self.context["requesting_participant"]:
+            return ROLE_SENDER
+        elif obj.sender.id == obj.conversation.other_participant(self.context["requesting_participant"]).id:
+            return ROLE_RECEIVER
 
 
-# Customer Serializers
-
-class CustomerConversationListSerializer(serializers.ModelSerializer):
-    receiver = serializers.SerializerMethodField()
+# Generic Serializers
+class GenericConversationListSerializer(serializers.ModelSerializer):
+    other_participant = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
-        fields = ["id", "receiver", "task", "last_message"]
+        fields = ("id", "other_participant", "task", "last_message")
 
-    def get_receiver(self, obj):
-        scout_participant = obj.participants.exclude(id=self.context["customer_participant_id"])[0]
+    def get_other_participant(self, obj):
+        # Finding other participant
         try:
-            return ScoutDetailSerializer(scout_participant).data
-        except Customer.DoesNotExist:
-            raise ValidationError({"detail": "No Scout found in default db"})
+            other_participant = obj.other_participant(self.context["requesting_participant"])
+            return ParticipantSerializer(other_participant).data
+        except IndexError:
+            raise ValidationError({"detail": "No other_participant found"})
 
-    @staticmethod
-    def get_last_message(obj):
-        return LastMessageSerializer(obj.messages.last()).data
+    def get_last_message(self, obj):
+        if obj.messages.last():
+            return MessageSerializer(obj.messages.last(), context=self.context).data
+        else:
+            return None
 
 
-class ConversationMessageListCreateSerializer(serializers.ModelSerializer):
-    sender = serializers.SerializerMethodField()
+class GenericMessageListCreateSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+    created_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
 
     class Meta:
         model = Message
-        fields = ['id', 'created_at', 'is_read', 'read_at', 'content', "sender"]
+        fields = ('id', 'created_at', 'is_read', 'read_at', 'content', "role")
 
-    def get_sender(self, obj):
-        customer_participant_id = self.context["customer_participant_id"]
-
-        if obj.sender.id == customer_participant_id:  # if customer is a sender
-            return "self"
-        else:  # if customer is a receiver
-            scout_participant = obj.conversation.participants.exclude(id=self.context["customer_participant_id"])[0]
-            return ScoutDetailSerializer(scout_participant).data
+    def get_role(self, obj):
+        if obj.sender.id == self.context["requesting_participant"]:
+            return ROLE_SENDER
+        elif obj.sender.id == obj.conversation.other_participant(self.context["requesting_participant"]).id:
+            return ROLE_RECEIVER

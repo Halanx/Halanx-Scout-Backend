@@ -46,10 +46,18 @@ class Conversation(models.Model):
         except AttributeError:
             return 0
 
+    def other_participant(self, obj_id):
+        """
+        :param obj_id: id of requesting participant
+        :return: other participant
+        """
+        return self.participants.exclude(id=obj_id)[0]
+
 
 class Message(models.Model):
     conversation = models.ForeignKey("chat.Conversation", on_delete=models.SET_NULL, related_name="messages", null=True)
-    sender = models.ForeignKey("chat.Participant", on_delete=models.SET_NULL, related_name="sent_messages", null=True)
+    sender = models.ForeignKey(Participant, on_delete=models.SET_NULL, related_name="sent_messages", null=True)
+    receiver = models.ForeignKey(Participant, on_delete=models.SET_NULL, related_name="received_messages", null=True)
     content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

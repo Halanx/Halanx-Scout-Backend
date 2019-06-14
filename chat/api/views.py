@@ -1,7 +1,8 @@
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.http import HttpResponse
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -10,157 +11,87 @@ from rest_framework.response import Response
 from UserBase.models import Customer
 from chat.models import Conversation, Message, Participant
 from chat.paginators import ConversationPagination
-from .serializers import ScoutConversationListSerializer, ScoutMessageListCreateSerializer,\
-    CustomerConversationListSerializer, ConversationMessageListCreateSerializer
+from utility.rest_auth_utils import ChatParticipantAuthentication, TYPE_CUSTOMER_PARTICIPANT, \
+    TYPE_SCOUT_PARTICIPANT
+from .serializers import GenericConversationListSerializer, \
+    GenericMessageListCreateSerializer
 
 
-def get_scout_participant_from_request(request):
+def get_participant_from_request(request):
     try:
-        p = Participant.objects.get(scout__user=request.user)
-    except Participant.DoesNotExist:
-        raise ValidationError({"detail": "Participant: Does not exist"})
-    except Participant.MultipleObjectsReturned:
-        raise ValidationError({"detail": "Participant: multiple objects returned"})
-    return p
+        if request.META["HTTP_PARTICIPANT_TYPE"] == TYPE_CUSTOMER_PARTICIPANT:
+            customer = Customer.objects.using(settings.HOMES_DB).get(user=request.user)
+            participant = Participant.objects.get(customer_id=customer.id)
+        elif request.META["HTTP_PARTICIPANT_TYPE"] == TYPE_SCOUT_PARTICIPANT:
+            participant = Participant.objects.get(scout__user=request.user)
+        else:
+            raise ValidationError({"detail": "No requesting participant found"})
 
+        return participant
 
-def get_customer_participant_from_request(request):
-    try:
-        customer = Customer.objects.using(settings.HOMES_DB).get(user=request.user)
-    except Customer.DoesNotExist:
-        raise ValidationError({"detail": "Customer: does not exist"})
-    except Customer.MultipleObjectsReturned:
-        raise ValidationError({"detail": "Customer: multiple objects returned"})
+    except ObjectDoesNotExist:
+        raise Exception("no such {} does not exist".format(request.META["HTTP_PARTICIPANT_TYPE"]))
 
-    try:
-        p = Participant.objects.get(customer=customer)
-    except Participant.DoesNotEXist:
-        raise ValidationError({"detail": "Participant:  does not exist"})
-    except Participant.MultipleObjectsReturned:
-        raise ValidationError({"detail": "Participant: multiple objects returned"})
-    return p
+    except MultipleObjectsReturned:
+        raise Exception("multiple objects for {} returned".format(request.META["HTTP_PARTICIPANT_TYPE"]))
 
 
 @api_view(("GET",))
 @permission_classes((IsAuthenticated,))
+@authentication_classes((ChatParticipantAuthentication,))
 def get_logged_in_user(request):
+    print(request.META)
     return HttpResponse(str(request.user))
 
 
-# Scouts Conversations
-
-class ScoutConversationListAPIView(ListAPIView):
-    """It displays the list of conversations of logged in scout"""
-    serializer_class = ScoutConversationListSerializer
-    permission_classes = [IsAuthenticated, ]
+# Generic Conversations
+class GenericConversationListView(ListAPIView):
+    serializer_class = GenericConversationListSerializer
+    authentication_classes = (ChatParticipantAuthentication,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = ConversationPagination
 
     def get_queryset(self):
-        scout_participant = get_scout_participant_from_request(self.request)
+        # will be used to pass in serializer context
+        self.requesting_participant = get_participant_from_request(self.request)
 
-        # Adding Scout Participant to pass in serializer context
-        self.scout_participant = scout_participant
         return sorted(Conversation.objects.filter(
-            participants=scout_participant),
+            participants=self.requesting_participant),
             key=lambda t: t.last_message_time, reverse=True)
 
     def get_serializer_context(self):
-        data = super(ScoutConversationListAPIView, self).get_serializer_context()
-        data["scout_participant_id"] = self.scout_participant.id
+        data = super(GenericConversationListView, self).get_serializer_context()
+        data["requesting_participant"] = self.requesting_participant.id
         return data
 
 
-class ScoutMessageListCreateAPIView(ListCreateAPIView):
-    """It displays the list of messages of logged in scout of given conversation"""
-    serializer_class = ScoutMessageListCreateSerializer
+class GenericMessageListCreateView(ListCreateAPIView):
+    serializer_class = GenericMessageListCreateSerializer
+    authentication_classes = (ChatParticipantAuthentication,)
     permission_classes = [IsAuthenticated, ]
     pagination_class = ConversationPagination
 
     def create(self, request, *args, **kwargs):
-        sender_scout = get_scout_participant_from_request(self.request)
-        # Adding Scout Participant to pass in serializer context
-        self.scout_participant = sender_scout
+        # will be used to pass in serializer context
+        self.requesting_participant = get_participant_from_request(self.request)
 
         conversation = Conversation.objects.get(id=self.kwargs.get('pk'),
-                                                participants=sender_scout)
-
-        serializer = ScoutMessageListCreateSerializer(request.data)
-
-        if serializer.is_valid():
-            serializer.save(conversation=conversation, sender=sender_scout)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def get_queryset(self):
-        sender_scout = get_scout_participant_from_request(self.request)
-        # Adding Scout Participant to pass in serializer context
-        self.scout_participant = sender_scout
-        return Message.objects.filter(conversation__id=self.kwargs.get('pk'),
-                                      conversation__participants=get_scout_participant_from_request(
-                                          self.request)).order_by("-created_at")
-
-    def get_serializer_context(self):
-        data = super(ScoutMessageListCreateAPIView, self).get_serializer_context()
-        data["scout_participant_id"] = self.scout_participant.id
-        return data
-
-
-# Customer Conversations
-
-class CustomerConversationListAPIView(ListAPIView):
-    """It displays the list of conversations of logged in customer"""
-    serializer_class = CustomerConversationListSerializer
-    permission_classes = [IsAuthenticated, ]
-    pagination_class = ConversationPagination
-
-    def get_queryset(self):
-        customer_participant = get_customer_participant_from_request(self.request)
-
-        # Adding customer Participant to pass in serializer context
-        self.customer_participant = customer_participant
-        return sorted(Conversation.objects.filter(
-            participants=customer_participant),
-            key=lambda t: t.last_message_time, reverse=True)
-
-    def get_serializer_context(self):
-        data = super(CustomerConversationListAPIView, self).get_serializer_context()
-        data["customer_participant_id"] = self.customer_participant.id
-        return data
-
-
-class CustomerMessageListCreateAPIView(ListCreateAPIView):
-    """It displays the list of messages of logged in customer of given conversation"""
-    serializer_class = ConversationMessageListCreateSerializer
-    permission_classes = [IsAuthenticated, ]
-    pagination_class = ConversationPagination
-
-    def create(self, request, *args, **kwargs):
-        customer_participant = get_customer_participant_from_request(self.request)
-        # Adding customer Participant to pass in serializer context
-        self.customer_participant = customer_participant
-
-        conversation = Conversation.objects.get(id=self.kwargs.get('pk'),
-                                                participants=customer_participant)
+                                                participants=self.requesting_participant)
 
         serializer = ConversationMessageListCreateSerializer(request.data)
 
         if serializer.is_valid():
-            serializer.save(conversation=conversation, sender=customer_participant)
+            serializer.save(conversation=conversation, sender=self.requesting_participant)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
-        customer_partcipant = get_customer_participant_from_request(self.request)
-        # Adding Scout Participant to pass in serializer context
-        self.customer_participant = customer_partcipant
+        # will be used to pass in serializer context
+        self.requesting_participant = get_participant_from_request(self.request)
         return Message.objects.filter(conversation__id=self.kwargs.get('pk'),
-                                      conversation__participants=customer_partcipant).order_by("-created_at")
+                                      conversation__participants=self.requesting_participant).order_by("-created_at")
 
     def get_serializer_context(self):
-        data = super(CustomerMessageListCreateAPIView, self).get_serializer_context()
-        data["customer_participant_id"] = self.customer_participant.id
+        data = super(GenericMessageListCreateView, self).get_serializer_context()
+        data["requesting_participant"] = self.requesting_participant.id
         return data
-
-

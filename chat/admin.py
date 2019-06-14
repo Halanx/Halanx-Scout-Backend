@@ -3,7 +3,7 @@ from chat.models import Conversation, Message, Participant
 
 
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'content', 'conversation', 'sender')
+    list_display = ('id', 'content', 'conversation', 'sender', "receiver")
 
 
 class ParticipantAdmin(admin.ModelAdmin):
