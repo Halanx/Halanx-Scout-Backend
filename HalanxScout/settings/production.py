@@ -23,6 +23,14 @@ DATABASES = {
         'PASSWORD': config('DB_PASS'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
+    },
+    'homes': {
+        'ENGINE': 'django.contrib.gis.db.backends.mysql',
+        'NAME': config('HOMES_DB_NAME'),
+        'USER': config('HOMES_DB_USER'),
+        'PASSWORD': config('HOMES_DB_PASS'),
+        'HOST': config('HOMES_DB_HOST'),
+        'PORT': config('HOMES_DB_PORT'),
     }
 }
 
@@ -58,7 +66,6 @@ DEFAULT_FILE_STORAGE = 'custom_storages.PublicMediaStorage'
 AWS_PRIVATE_MEDIA_LOCATION = 'media/private'
 PRIVATE_FILE_STORAGE = 'custom_storages.PrivateMediaStorage'
 
-
 # Logging Settings
 INSTALLED_APPS += [
     'raven.contrib.django.raven_compat',
@@ -92,7 +99,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/home/ubuntu/logs/backend.log',
+            'filename': '/home/nikhil/logs/backend.log',
         },
         # Send info messages to syslog
         'syslog': {
