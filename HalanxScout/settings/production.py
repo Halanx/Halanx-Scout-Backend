@@ -99,7 +99,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/home/nikhil/logs/backend.log',
+            'filename': '/home/ubuntu/logs/backend.log',
         },
         # Send info messages to syslog
         'syslog': {
