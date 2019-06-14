@@ -78,7 +78,7 @@ class GenericMessageListCreateView(ListCreateAPIView):
         conversation = Conversation.objects.get(id=self.kwargs.get('pk'),
                                                 participants=self.requesting_participant)
 
-        serializer = ConversationMessageListCreateSerializer(request.data)
+        serializer = GenericMessageListCreateSerializer(request.data)
 
         if serializer.is_valid():
             serializer.save(conversation=conversation, sender=self.requesting_participant)
