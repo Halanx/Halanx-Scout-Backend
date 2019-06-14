@@ -14,6 +14,10 @@ urlpatterns = [
     url(r'^accounts/', include('allauth.urls')),
 
     url(r'^scouts/', include('scouts.urls')),
+
+    url(r'^chat/', include('chat.urls')),
+    url(r'^chat/realtime/', include('chat.urls')),
+
 ]
 
 

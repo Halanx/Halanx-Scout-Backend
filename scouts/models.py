@@ -60,12 +60,12 @@ class Scout(models.Model):
 
     get_profile_pic_html.short_description = 'Profile Pic'
     get_profile_pic_html.allow_tags = True
-    
-    
+
+
 class ScoutPermanentAddress(AddressDetail):
     scout = models.OneToOneField('Scout', on_delete=models.CASCADE, related_name='permanent_address')
 
-    
+
 class ScoutWorkAddress(AddressDetail):
     scout = models.OneToOneField('Scout', on_delete=models.CASCADE, related_name='work_address')
     same_as_permanent_address = models.BooleanField(default=False)
@@ -117,7 +117,7 @@ class ScoutPicture(models.Model):
             self.scout.profile_pic_thumbnail_url = default_profile_pic_thumbnail_url
             self.scout.save()
         super(ScoutPicture, self).save(*args, **kwargs)
-        
+
 
 class ScoutDocument(Document):
     scout = models.ForeignKey('Scout', null=True, on_delete=models.SET_NULL, related_name='documents')

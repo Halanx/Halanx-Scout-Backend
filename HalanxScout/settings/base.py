@@ -21,12 +21,17 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
 
+
+    'allauth.socialaccount',
+
     'UserBase',
     'Homes.Houses',
     'Homes.Tenants',
     'Homes.Bookings',
 
     'scouts',
+    'chat',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -60,6 +65,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'HalanxScout.wsgi.application'
+ASGI_APPLICATION = 'HalanxScout.routing.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
 
 STATIC_URL = '/static/'
 
