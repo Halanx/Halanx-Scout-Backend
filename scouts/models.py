@@ -10,7 +10,7 @@ from common.models import AddressDetail, BankDetail, Wallet, Document, Notificat
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
-    get_scout_task_category_image_upload_path, ScoutTaskStatusCategories
+    get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, send_scout_notification
 from utility.image_utils import compress_image
 
 
@@ -24,6 +24,8 @@ class Scout(models.Model):
     profile_pic_url = models.CharField(max_length=500, blank=True, null=True, default=default_profile_pic_url)
     profile_pic_thumbnail_url = models.CharField(max_length=500, blank=True, null=True,
                                                  default=default_profile_pic_thumbnail_url)
+
+    gcm_id = models.CharField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return "{}:{}".format(self.id, self.phone_no)
@@ -154,6 +156,13 @@ class ScoutNotification(Notification):
     scout = models.ForeignKey('Scout', on_delete=models.CASCADE, related_name='notifications')
     category = models.ForeignKey('ScoutNotificationCategory', on_delete=models.SET_NULL, null=True,
                                  related_name='notifications')
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            send_scout_notification(self.scout, title=self.category.name, content=self.content,
+                                    category={'name': self.category.name, 'image': self.category.image.url},
+                                    payload=self.payload)
+        super(ScoutNotification, self).save(*args, **kwargs)
 
     def get_notification_image_html(self):
         if self.category and self.category.image:

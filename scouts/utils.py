@@ -1,6 +1,11 @@
+import json
+
 from decouple import config
+from pyfcm import FCMNotification
 
 from utility.random_utils import generate_random_code
+
+notify_scout = FCMNotification(api_key=config('FCM_SERVER_KEY')).notify_single_device
 
 
 def get_picture_upload_path(instance, filename):
@@ -37,3 +42,9 @@ COMPLETE = 'complete'
 ScoutTaskStatusCategories = ((UNASSIGNED, 'Unassigned'),
                              (ASSIGNED, 'Assigned'),
                              (COMPLETE, 'Complete'))
+
+
+def send_scout_notification(scout, title, content, category, payload):
+    notify_scout(registration_id=scout.gcm_id,
+                 data_message={'data': json.dumps({'title': title, 'content': content,
+                                                   'category': category, 'payload': payload})})
