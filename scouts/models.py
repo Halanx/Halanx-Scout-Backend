@@ -9,7 +9,7 @@ from django.utils.html import format_html
 from Homes.Bookings.models import Booking
 from Homes.Houses.models import HouseVisit
 from chat.models import Conversation, Participant
-from chat.utils import TYPE_SCOUT
+from chat.utils import TYPE_SCOUT, TYPE_CUSTOMER
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
@@ -336,7 +336,8 @@ def scout_task_post_save_hook(sender, instance, created, **kwargs):
         conversation = Conversation.objects.create(task=instance)
         customer = instance.customer
         if customer:
-            conversation.participants.add(Participant.objects.get_or_create(customer_id=customer.id)[0])
+            conversation.participants.add(Participant.objects.get_or_create(customer_id=customer.id,
+                                                                            type=TYPE_CUSTOMER)[0])
 
 
 # noinspection PyUnusedLocal
