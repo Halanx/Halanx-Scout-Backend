@@ -24,7 +24,7 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
     ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
     ScoutWallet, ScoutPayment, ScoutTask
-from scouts.utils import ASSIGNED, COMPLETE
+from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED
 from utility.sms_utils import send_sms
 
 
@@ -315,6 +315,7 @@ class ScoutTaskRetrieveUpdateDestroyAPIView(AuthenticatedRequestMixin, RetrieveU
     def perform_destroy(self, instance):
         task = self.get_object()
         task.cancelled_by.add(task.scout)
+        task.status = UNASSIGNED
         task.scout = None
         task.save()
 
