@@ -169,7 +169,7 @@ class ScoutTaskListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ScoutTask
-        fields = ('id', 'scout', 'category', 'earning', 'scheduled_at', 'house', 'space', 'customer')
+        fields = ('id', 'scout', 'category', 'earning', 'scheduled_at', 'house', 'space', 'customer', 'conversation')
 
     @staticmethod
     def get_house(obj):

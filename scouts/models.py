@@ -2,10 +2,14 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.html import format_html
 
+from Homes.Bookings.models import Booking
+from Homes.Houses.models import HouseVisit
+from chat.models import Conversation, Participant
+from chat.utils import TYPE_SCOUT
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
@@ -267,6 +271,29 @@ class ScoutTask(models.Model):
     def __str__(self):
         return str(self.id)
 
+    @property
+    def visit(self):
+        if self.visit_id:
+            return (HouseVisit.objects.using(settings.HOMES_DB).select_related('customer')
+                    .filter(id=self.visit_id).first())
+
+    @property
+    def booking(self):
+        if self.booking_id:
+            return (Booking.objects.using(settings.HOMES_DB).select_related('tenant__customer')
+                    .filter(id=self.booking_id).first())
+
+    @property
+    def customer(self):
+        if self.visit_id:
+            visit = self.visit
+            if self.visit:
+                return visit.customer
+        if self.booking_id:
+            booking = self.booking
+            if booking and booking.tenant:
+                return booking.tenant.customer
+
 
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=Scout)
@@ -276,6 +303,7 @@ def scout_post_save_hook(sender, instance, created, **kwargs):
         ScoutWorkAddress(scout=instance).save()
         ScoutBankDetail(scout=instance).save()
         ScoutWallet(scout=instance).save()
+        Participant(scout=instance, type=TYPE_SCOUT).save()
         super(Scout, instance).save()
 
 
@@ -299,3 +327,31 @@ def scout_payment_post_save_hook(sender, instance, created, **kwargs):
     wallet.debit = sum(payment.amount for payment in wallet.payments.filter(status=PAID))
     wallet.pending_withdrawal = sum(payment.amount for payment in wallet.payments.filter(status=PENDING))
     wallet.save()
+
+
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ScoutTask)
+def scout_task_post_save_hook(sender, instance, created, **kwargs):
+    if created:
+        conversation = Conversation.objects.create(task=instance)
+        customer = instance.customer
+        if customer:
+            conversation.participants.add(Participant.objects.get_or_create(customer_id=customer.id)[0])
+
+
+# noinspection PyUnusedLocal
+@receiver(pre_save, sender=ScoutTask)
+def scout_task_pre_save_hook(sender, instance, **kwargs):
+    old_task = ScoutTask.objects.filter(id=instance.id).first()
+    if not old_task:
+        return
+
+    old_scout = old_task.scout
+    new_scout = instance.scout
+    conversation = instance.conversation
+    if old_scout != new_scout:
+        if old_scout and old_scout.chat_participant in conversation.participants.all():
+            conversation.participants.remove(old_scout.chat_participant)
+
+        if new_scout:
+            conversation.participants.add(new_scout.chat_participant)
