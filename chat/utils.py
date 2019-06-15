@@ -1,11 +1,11 @@
 
-TYPE_SCOUT = "participant_scout"
-TYPE_CUSTOMER = "participant_customer"
+TYPE_SCOUT = 'scout'
+TYPE_CUSTOMER = 'customer'
 
 ParticipantTypeCategories = (
     (TYPE_SCOUT, 'Scout'),
     (TYPE_CUSTOMER, 'Customer')
 )
 
-ROLE_SENDER = "sender"
-ROLE_RECEIVER = "receiver"
+ROLE_SENDER = 'sender'
+ROLE_RECEIVER = 'receiver'

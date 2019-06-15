@@ -20,9 +20,8 @@ INSTALLED_APPS = [
     'rest_auth',
     'allauth',
     'allauth.account',
-
-
     'allauth.socialaccount',
+    'channels',
 
     'UserBase',
     'Homes.Houses',
@@ -31,7 +30,6 @@ INSTALLED_APPS = [
 
     'scouts',
     'chat',
-    'channels',
 ]
 
 MIDDLEWARE = [

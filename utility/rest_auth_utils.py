@@ -1,11 +1,9 @@
 from django.conf import settings
-from django.utils.datastructures import MultiValueDictKeyError
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import exceptions
 from rest_framework.authentication import TokenAuthentication, get_authorization_header
-from django.utils.translation import ugettext_lazy as _
 
-TYPE_CUSTOMER_PARTICIPANT = "customer_participant"
-TYPE_SCOUT_PARTICIPANT = "scout_participant"
+from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT
 
 
 class CustomerAuthentication(TokenAuthentication):
@@ -44,19 +42,20 @@ class ChatParticipantAuthentication(TokenAuthentication):
 
         return self.authenticate_credentials(token, request)
 
+    # noinspection PyMethodOverriding
     def authenticate_credentials(self, key, request):
         model = self.get_model()
         try:
-            if request.META["HTTP_PARTICIPANT_TYPE"] == TYPE_CUSTOMER_PARTICIPANT:
+            if request.META["HTTP_PARTICIPANT_TYPE"] == TYPE_CUSTOMER:
                 token = model.objects.using(settings.HOMES_DB).select_related('user').get(key=key)
 
-            elif request.META["HTTP_PARTICIPANT_TYPE"] == TYPE_SCOUT_PARTICIPANT:
+            elif request.META["HTTP_PARTICIPANT_TYPE"] == TYPE_SCOUT:
                 token = model.objects.select_related('user').get(key=key)
 
             else:
                 raise exceptions.AuthenticationFailed(
-                    _('type can be one of the available choices: ' + TYPE_SCOUT_PARTICIPANT + "," +
-                      TYPE_CUSTOMER_PARTICIPANT))
+                    _('type can be one of the available choices: ' + TYPE_SCOUT + "," +
+                      TYPE_CUSTOMER))
 
         except KeyError:
             raise exceptions.AuthenticationFailed(_("No 'PARTICIPANT-TYPE' header found"))

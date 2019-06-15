@@ -2,14 +2,16 @@ from django.contrib import admin
 from chat.models import Conversation, Message, Participant
 
 
+@admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'content', 'conversation', 'sender', "receiver")
+    list_display = ('id', 'content', 'conversation', 'sender', 'receiver')
 
 
+@admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', 'customer_id', 'scout')
+    list_display = ('id', 'name', 'type', 'customer_id', 'scout')
 
 
-admin.site.register(Conversation)
-admin.site.register(Participant, ParticipantAdmin)
-admin.site.register(Message, MessageAdmin)
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    pass
