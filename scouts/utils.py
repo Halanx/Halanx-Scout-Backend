@@ -44,6 +44,20 @@ ScoutTaskStatusCategories = ((UNASSIGNED, 'Unassigned'),
                              (COMPLETE, 'Complete'))
 
 
+REQUEST_ACCEPTED = 'accepted'
+REQUEST_REJECTED = 'rejected'
+REQUEST_AWAITED = 'awaited'
+
+ScoutTaskAssignmentRequestStatusCategories = (
+    (REQUEST_ACCEPTED, 'Accepted'),
+    (REQUEST_REJECTED, 'Rejected'),
+    (REQUEST_AWAITED, 'Awaited')
+)
+
+# predefined scout notification categories
+NEW_TASK_NOTIFICATION = 'NewTask'
+
+
 def send_scout_notification(scout, title, content, category, payload):
     notify_scout(registration_id=scout.gcm_id,
                  data_message={'data': json.dumps({'title': title, 'content': content,

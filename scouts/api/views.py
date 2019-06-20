@@ -4,6 +4,7 @@ from datetime import timedelta, datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import status, exceptions
@@ -23,8 +24,8 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
     ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
-    ScoutWallet, ScoutPayment, ScoutTask
-from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED
+    ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest
+from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED
 from utility.sms_utils import send_sms
 
 
@@ -314,10 +315,35 @@ class ScoutTaskRetrieveUpdateDestroyAPIView(AuthenticatedRequestMixin, RetrieveU
 
     def perform_destroy(self, instance):
         task = self.get_object()
-        task.cancelled_by.add(task.scout)
+        assignment_request = task.assignment_requests.filter(scout=task.scout).last()
+        if assignment_request:
+            assignment_request.status = REQUEST_REJECTED
+            assignment_request.save()
         task.status = UNASSIGNED
         task.scout = None
         task.save()
+
+
+class ScoutTaskAssignmentRequestUpdateAPIView(AuthenticatedRequestMixin, UpdateAPIView):
+    serializer_class = None
+    queryset = ScoutTaskAssignmentRequest.objects.all()
+
+    def get_object(self):
+        task = get_object_or_404(ScoutTask, pk=self.kwargs.get('pk'), status=UNASSIGNED)
+        assignment_request = task.assignment_requests.filter(scout__user=self.request.user,
+                                                             status=REQUEST_AWAITED).last()
+        if assignment_request:
+            return assignment_request
+        else:
+            raise Http404
+
+    def update(self, request, *args, **kwargs):
+        assignment_request = self.get_object()
+        data = request.data
+        if data.get('status') in [REQUEST_ACCEPTED, REQUEST_REJECTED]:
+            assignment_request.status = data.get('status')
+            assignment_request.save()
+        return Response({'detail': data.get('status')})
 
 
 class TenantRetrieveView(RetrieveAPIView):

@@ -206,3 +206,11 @@ class ScoutTaskDetailSerializer(ScoutTaskListSerializer):
     class Meta:
         model = ScoutTask
         fields = ScoutTaskListSerializer.Meta.fields + ('sub_tasks', 'review_tags', 'remark')
+
+
+class NewScoutTaskNotificationSerializer(serializers.ModelSerializer):
+    scheduled_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
+
+    class Meta:
+        model = ScoutTask
+        fields = ('id', 'category', 'scheduled_at')

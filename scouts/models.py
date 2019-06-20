@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.html import format_html
 
 from Homes.Bookings.models import Booking
@@ -14,7 +15,9 @@ from common.models import AddressDetail, BankDetail, Wallet, Document, Notificat
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
-    get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, send_scout_notification
+    get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, send_scout_notification, \
+    ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
+    REQUEST_REJECTED, ASSIGNED
 from utility.image_utils import compress_image
 
 
@@ -163,8 +166,9 @@ class ScoutNotification(Notification):
 
     def save(self, *args, **kwargs):
         if not self.pk:
+            from scouts.api.serializers import ScoutTaskCategorySerializer
             send_scout_notification(self.scout, title=self.category.name, content=self.content,
-                                    category={'name': self.category.name, 'image': self.category.image.url},
+                                    category=ScoutTaskCategorySerializer(self.category).data,
                                     payload=self.payload)
         super(ScoutNotification, self).save(*args, **kwargs)
 
@@ -246,7 +250,6 @@ class ScoutTaskReviewTagCategory(models.Model):
 
 class ScoutTask(models.Model):
     scout = models.ForeignKey('Scout', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
-    cancelled_by = models.ManyToManyField('Scout', blank=True)
     category = models.ForeignKey('ScoutTaskCategory', on_delete=models.SET_NULL, null=True, blank=True,
                                  related_name='tasks')
     sub_tasks = models.ManyToManyField('ScoutSubTaskCategory', blank=True)
@@ -293,6 +296,19 @@ class ScoutTask(models.Model):
             booking = self.booking
             if booking and booking.tenant:
                 return booking.tenant.customer
+
+
+class ScoutTaskAssignmentRequest(models.Model):
+    task = models.ForeignKey('ScoutTask', on_delete=models.SET_NULL, null=True, related_name='assignment_requests')
+    scout = models.ForeignKey('Scout', on_delete=models.SET_NULL, null=True, related_name='task_assignment_requests')
+    status = models.CharField(max_length=50, choices=ScoutTaskAssignmentRequestStatusCategories,
+                              default=REQUEST_AWAITED)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    responded_at = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return str(self.id)
 
 
 # noinspection PyUnusedLocal
@@ -356,3 +372,34 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
 
         if new_scout:
             conversation.participants.add(new_scout.chat_participant)
+
+
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ScoutTaskAssignmentRequest)
+def scout_task_assignment_request_post_save_hook(sender, instance, created, **kwargs):
+    task = instance.task
+    if created and task:
+        new_task_notification_category, _ = ScoutNotificationCategory.objects.get_or_create(name=NEW_TASK_NOTIFICATION)
+        from scouts.api.serializers import NewScoutTaskNotificationSerializer
+        ScoutNotification.objects.create(category=new_task_notification_category, scout=instance.scout,
+                                         payload=NewScoutTaskNotificationSerializer(task).data)
+
+
+# noinspection PyUnusedLocal
+@receiver(pre_save, sender=ScoutTaskAssignmentRequest)
+def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields={'responded_at'}, **kwargs):
+    old_request = ScoutTaskAssignmentRequest.objects.filter(id=instance.id).first()
+    if not old_request:
+        return
+
+    if old_request.status == REQUEST_AWAITED and instance.status in [REQUEST_ACCEPTED, REQUEST_REJECTED]:
+        instance.responded_at = timezone.now()
+        task = instance.task
+        if instance.status == REQUEST_ACCEPTED:
+            task.scout = instance.scout
+            task.status = ASSIGNED
+            task.assigned_at = instance.responded_at
+            task.save()
+        elif instance.status == REQUEST_REJECTED:
+            # find some other scout to send notification to
+            pass
