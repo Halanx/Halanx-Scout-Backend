@@ -210,6 +210,7 @@ class ScoutTaskDetailSerializer(ScoutTaskListSerializer):
 
 class NewScoutTaskNotificationSerializer(serializers.ModelSerializer):
     scheduled_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
+    category = ScoutTaskCategorySerializer()
 
     class Meta:
         model = ScoutTask
