@@ -34,6 +34,8 @@ class Scout(models.Model):
                                                  default=default_profile_pic_thumbnail_url)
 
     gcm_id = models.CharField(max_length=500, blank=True, null=True)
+    rating = models.PositiveIntegerField(default=0)
+    review_tags = models.ManyToManyField('ScoutTaskReviewTagCategory', blank=True, related_name='scouts')
 
     def __str__(self):
         return "{}:{}".format(self.id, self.phone_no)
@@ -269,7 +271,7 @@ class ScoutTask(models.Model):
 
     rating = models.PositiveIntegerField(default=0)
     remark = models.TextField(blank=True, null=True)
-    review_tags = models.ManyToManyField('ScoutTaskReviewTagCategory', blank=True)
+    review_tags = models.ManyToManyField('ScoutTaskReviewTagCategory', blank=True, related_name='tasks')
     payment = models.ForeignKey('ScoutPayment', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
 
     def __str__(self):
@@ -371,7 +373,7 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
         if old_scout and old_scout.chat_participant in conversation.participants.all():
             conversation.participants.remove(old_scout.chat_participant)
 
-        if new_scout:
+        if new_scout and new_scout.chat_participant not in conversation.participants.all():
             conversation.participants.add(new_scout.chat_participant)
 
 
