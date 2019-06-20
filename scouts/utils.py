@@ -1,5 +1,3 @@
-import json
-
 from decouple import config
 from pyfcm import FCMNotification
 
@@ -56,9 +54,3 @@ ScoutTaskAssignmentRequestStatusCategories = (
 
 # predefined scout notification categories
 NEW_TASK_NOTIFICATION = 'NewTask'
-
-
-def send_scout_notification(scout, title, content, category, payload):
-    notify_scout(registration_id=scout.gcm_id,
-                 data_message={'data': json.dumps({'title': title, 'content': content,
-                                                   'category': category, 'payload': payload})})

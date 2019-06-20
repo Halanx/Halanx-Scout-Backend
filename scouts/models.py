@@ -13,9 +13,10 @@ from chat.models import Conversation, Participant
 from chat.utils import TYPE_SCOUT, TYPE_CUSTOMER
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
+from scouts.tasks import send_scout_notification
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
-    get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, send_scout_notification, \
+    get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
     REQUEST_REJECTED, ASSIGNED
 from utility.image_utils import compress_image
@@ -167,9 +168,9 @@ class ScoutNotification(Notification):
     def save(self, *args, **kwargs):
         if not self.pk:
             from scouts.api.serializers import ScoutTaskCategorySerializer
-            send_scout_notification(self.scout, title=self.category.name, content=self.content,
-                                    category=ScoutTaskCategorySerializer(self.category).data,
-                                    payload=self.payload)
+            send_scout_notification.delay(self.scout.id, title=self.category.name, content=self.content,
+                                          category=ScoutTaskCategorySerializer(self.category).data,
+                                          payload=self.payload)
         super(ScoutNotification, self).save(*args, **kwargs)
 
     def get_notification_image_html(self):
