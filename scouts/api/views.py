@@ -259,7 +259,7 @@ class ScoutNotificationListView(AuthenticatedRequestMixin, ListAPIView):
 
     def list(self, request, *args, **kwargs):
         scout = get_object_or_404(Scout, user=self.request.user)
-        queryset = scout.notifications.order_by('-timestamp').all()[:30]
+        queryset = scout.notifications.filter(display=True).order_by('-timestamp').all()[:30]
         data = self.get_serializer(queryset, many=True).data
         scout.notifications.all().update(seen=True)
         return Response(data, status=status.HTTP_200_OK)

@@ -383,7 +383,7 @@ def scout_task_assignment_request_post_save_hook(sender, instance, created, **kw
         new_task_notification_category, _ = ScoutNotificationCategory.objects.get_or_create(name=NEW_TASK_NOTIFICATION)
         from scouts.api.serializers import NewScoutTaskNotificationSerializer
         ScoutNotification.objects.create(category=new_task_notification_category, scout=instance.scout,
-                                         payload=NewScoutTaskNotificationSerializer(task).data)
+                                         payload=NewScoutTaskNotificationSerializer(task).data, display=False)
 
 
 # noinspection PyUnusedLocal
