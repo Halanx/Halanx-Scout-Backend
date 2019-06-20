@@ -50,6 +50,11 @@ class MessageSerializer(serializers.ModelSerializer):
             return ROLE_SENDER
         elif obj.sender == obj.conversation.other_participant(self.context['requesting_participant']):
             return ROLE_RECEIVER
+        elif self.context['requesting_participant'].type == TYPE_SCOUT:
+            # multiple scout participants possible. All of them sender if not original sender
+            return ROLE_SENDER
+        else:
+            return ROLE_RECEIVER
 
 
 class ConversationListSerializer(serializers.ModelSerializer):
