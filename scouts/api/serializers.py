@@ -10,7 +10,7 @@ from UserBase.serializers import CustomerSerializer
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
     ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment, ScoutTask, \
-    ScoutTaskCategory, ScoutSubTaskCategory
+    ScoutTaskCategory, ScoutSubTaskCategory, ScoutTaskReviewTagCategory
 from utility.serializers import DateTimeFieldTZ
 
 
@@ -45,6 +45,12 @@ class ScoutBankDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ScoutTaskReviewTagCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoutTaskReviewTagCategory
+        fields = '__all__'
+
+
 class ScoutSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     permanent_address = ScoutPermanentAddressSerializer()
@@ -52,6 +58,7 @@ class ScoutSerializer(serializers.ModelSerializer):
     bank_detail = ScoutBankDetailSerializer()
     document_submission_complete = serializers.ReadOnlyField()
     bank_details_complete = serializers.ReadOnlyField()
+    review_tags = ScoutTaskReviewTagCategorySerializer(many=True)
 
     class Meta:
         model = Scout
