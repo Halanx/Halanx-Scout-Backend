@@ -34,7 +34,7 @@ class Scout(models.Model):
                                                  default=default_profile_pic_thumbnail_url)
 
     gcm_id = models.CharField(max_length=500, blank=True, null=True)
-    rating = models.PositiveIntegerField(default=0)
+    rating = models.FloatField(default=0)
     review_tags = models.ManyToManyField('ScoutTaskReviewTagCategory', blank=True, related_name='scouts')
 
     def __str__(self):
