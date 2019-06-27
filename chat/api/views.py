@@ -72,7 +72,8 @@ class MessageListCreateView(ListCreateAPIView):
         serializer = MessageSerializer(data=request.data, context=self.get_serializer_context())
 
         if serializer.is_valid():
-            serializer.save(conversation=conversation, sender=self.requesting_participant)
+            serializer.save(conversation=conversation, sender=self.requesting_participant,
+                            receiver=conversation.other_participant(self.requesting_participant))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
