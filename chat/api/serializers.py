@@ -79,7 +79,7 @@ class GenericConversationListSerializer(serializers.ModelSerializer):
 
 class GenericMessageListCreateSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
-    created_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
+    created_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT, read_only=True)
 
     class Meta:
         model = Message

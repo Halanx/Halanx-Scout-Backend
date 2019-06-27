@@ -78,10 +78,11 @@ class GenericMessageListCreateView(ListCreateAPIView):
         conversation = Conversation.objects.get(id=self.kwargs.get('pk'),
                                                 participants=self.requesting_participant)
 
-        serializer = GenericMessageListCreateSerializer(request.data)
-
+        serializer = GenericMessageListCreateSerializer(data=request.data, context=self.get_serializer_context())
         if serializer.is_valid():
-            serializer.save(conversation=conversation, sender=self.requesting_participant)
+            serializer.save(conversation=conversation, sender=self.requesting_participant,
+                            receiver=conversation.other_participant(self.requesting_participant.id))
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
