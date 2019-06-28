@@ -64,3 +64,9 @@ class Message(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class SocketClient(models.Model):
+    socket_id = models.CharField(max_length=100)
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name='socket_clients')
+

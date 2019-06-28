@@ -8,11 +8,15 @@ from rest_framework.response import Response
 
 from UserBase.models import Customer
 from chat.api.serializers import ConversationListSerializer, MessageSerializer
-from chat.models import Conversation, Message, Participant
+from chat.models import Conversation, Message, Participant, SocketClient
 from chat.paginators import ChatPagination
-from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT
+from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, SOCKET_STATUS_CONNECTED, SOCKET_STATUS_DISCONNECTED, \
+    NODE_SERVER_CHAT_ENDPOINT
 from scouts.models import Scout
 from utility.rest_auth_utils import ChatParticipantAuthentication
+from rest_framework.decorators import api_view, authentication_classes
+from django.http import JsonResponse
+import requests
 
 
 def get_participant_from_request(request):
@@ -56,6 +60,13 @@ class ConversationListView(ListAPIView):
         return data
 
 
+def send_message_to_receiver_participant_via_socket(data, receiver_participant):
+    request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id}
+    x = requests.post(NODE_SERVER_CHAT_ENDPOINT, json=request_data)
+    print(x.content)
+    return x.status_code
+
+
 class MessageListCreateView(ListCreateAPIView):
     serializer_class = MessageSerializer
     authentication_classes = (ChatParticipantAuthentication,)
@@ -72,9 +83,16 @@ class MessageListCreateView(ListCreateAPIView):
         serializer = MessageSerializer(data=request.data, context=self.get_serializer_context())
 
         if serializer.is_valid():
-            serializer.save(conversation=conversation, sender=self.requesting_participant,
-                            receiver=conversation.other_participant(self.requesting_participant))
+            msg = serializer.save(conversation=conversation, sender=self.requesting_participant,
+                                  receiver=conversation.other_participant(self.requesting_participant))
+
+            # Sending Message to Node JS Socket Server via post request
+            send_message_to_receiver_participant_via_socket(
+                data=MessageSerializer(msg, context=self.get_serializer_context()).data,
+                receiver_participant=msg.receiver)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
@@ -88,3 +106,38 @@ class MessageListCreateView(ListCreateAPIView):
         data = super(MessageListCreateView, self).get_serializer_context()
         data['requesting_participant'] = self.requesting_participant
         return data
+
+
+@api_view(('POST',))
+@authentication_classes((ChatParticipantAuthentication,))
+def get_socket_id_from_node_server(request):
+    result = {}
+    try:
+        requesting_participant = get_participant_from_request(request)
+        socket_id = request.data['socket_id']
+        data = request.data['data']
+        # user = request.auth.user
+
+        # Adding Socket to Socket Client
+        if data['socket_status'] == SOCKET_STATUS_CONNECTED:
+            socket_client, created = SocketClient.objects.update_or_create(
+                defaults={'socket_id': socket_id,
+                          'participant': requesting_participant
+                          },
+                participant=requesting_participant)
+
+            result = {'status': 'success', 'socket_id': socket_client.socket_id, 'message': "connected succesfully"}
+
+        # Remove Socket from Socket Table
+        elif data['socket_status'] == SOCKET_STATUS_DISCONNECTED:
+            deleted, _ = SocketClient.objects.filter(socket_id=socket_id, participant=requesting_participant).delete()
+            if deleted:
+                result = {'status': 'success', 'socket_id': socket_id, 'message': 'disconnected succesfully'}
+            else:
+                result = {'status': 'error', 'message': 'No Such Client Exists'}
+
+    except Exception as E:
+        print(E)
+        result = {'status': 'error', 'message': str(E)}
+
+    return JsonResponse(result)

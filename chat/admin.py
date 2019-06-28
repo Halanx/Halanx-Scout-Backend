@@ -1,5 +1,5 @@
 from django.contrib import admin
-from chat.models import Conversation, Message, Participant
+from chat.models import Conversation, Message, Participant, SocketClient
 
 
 @admin.register(Message)
@@ -13,5 +13,10 @@ class ParticipantAdmin(admin.ModelAdmin):
 
 
 @admin.register(Conversation)
-class ConversationAdmin(admin.ModelAdmin):
+class ConversationModelAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(SocketClient)
+class SocketClientModelAdmin(admin.ModelAdmin):
+    list_display = ('socket_id', 'participant')
