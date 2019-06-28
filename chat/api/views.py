@@ -61,10 +61,14 @@ class ConversationListView(ListAPIView):
 
 
 def send_message_to_receiver_participant_via_socket(data, receiver_participant):
-    request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id}
-    x = requests.post(NODE_SERVER_CHAT_ENDPOINT, json=request_data)
-    print(x.content)
-    return x.status_code
+    try:
+        request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id}
+        x = requests.post(NODE_SERVER_CHAT_ENDPOINT, json=request_data)
+        print(x.content)
+        return x.status_code
+    except Exception as E:
+        print("message not sent due to", E)
+        return None
 
 
 class MessageListCreateView(ListCreateAPIView):
