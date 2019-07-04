@@ -14,6 +14,7 @@ from chat.paginators import ChatPagination
 from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, SOCKET_STATUS_CONNECTED, SOCKET_STATUS_DISCONNECTED, \
     NODE_SERVER_CHAT_ENDPOINT
 from scouts.models import Scout
+from utility.logging_utils import sentry_debug_logger
 from utility.rest_auth_utils import ChatParticipantAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from django.http import JsonResponse
@@ -66,10 +67,10 @@ def send_message_to_receiver_participant_via_socket(data, receiver_participant):
         request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id,
                         'server_password': config('NODEJS_SERVER_PASSWORD')}
         x = requests.post(NODE_SERVER_CHAT_ENDPOINT, data=request_data)
-        print(x.content)
+        sentry_debug_logger.info('response is ' + str(x) + str(x.content))
         return x.status_code
     except Exception as E:
-        print("message not sent due to", E)
+        sentry_debug_logger.info('exception is' + str(E))
         return None
 
 

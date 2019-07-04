@@ -64,3 +64,29 @@ if DEBUG:
     DEBUG_TOOLBAR_CONFIG = {
         'INTERCEPT_REDIRECTS': False,
     }
+
+
+# Logging Settings
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
+    'handlers': {
+        # all levels logged to sentry
+        'sentry_debug': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'loggers': {
+        'sentry_debug_logger': {
+            'handlers': ['sentry_debug', ],
+            'level': 'DEBUG',
+            'propagate': False,
+        }
+    }
+}
