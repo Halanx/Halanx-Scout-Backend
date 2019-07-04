@@ -7,6 +7,7 @@ from Homes.Bookings.models import Booking
 from Homes.Houses.models import House, HouseVisit
 from Homes.Houses.serializers import HouseSerializer, SpaceSerializer
 from UserBase.serializers import CustomerSerializer
+from chat.api.serializers import ScoutDetailSerializer
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
     ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment, ScoutTask, \
@@ -164,7 +165,7 @@ class ScoutTaskCategorySerializer(serializers.ModelSerializer):
 class ScoutSubTaskCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ScoutSubTaskCategory
-        fields = ('name', )
+        fields = ('name',)
 
 
 class ScoutTaskListSerializer(serializers.ModelSerializer):
@@ -222,3 +223,12 @@ class NewScoutTaskNotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScoutTask
         fields = ('id', 'category', 'scheduled_at')
+
+
+class ScoutTaskForHouseVisitSerializer(serializers.ModelSerializer):
+    scout = ScoutDetailSerializer()
+
+    class Meta:
+        model = ScoutTask
+        fields = ('scout', 'category', 'status', 'house_id', 'visit_id', 'booking_id', 'scheduled_at', 'assigned_at',
+                  'completed_at')

@@ -26,4 +26,7 @@ urlpatterns = (
     url(r'^tasks/(?P<pk>\d+)/request/$', views.ScoutTaskAssignmentRequestUpdateAPIView.as_view()),
 
     url(r'^tenant/$', views.TenantRetrieveView.as_view()),
+
+    # Scout Details for a house visit
+    url('visits/details/', views.HouseVisitScoutDetailView.as_view()),
 )

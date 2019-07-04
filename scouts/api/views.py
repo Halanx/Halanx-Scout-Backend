@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import status, exceptions
@@ -13,16 +13,19 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView, \
-    RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView
+    RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from Homes.Houses.models import HouseVisit
 from Homes.Tenants.models import Tenant
 from Homes.Tenants.serializers import TenantSerializer
+from UserBase.models import Customer
+from chat.api.serializers import ScoutDetailSerializer
 from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
-    ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer
+    ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer, ScoutTaskForHouseVisitSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
     ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED
@@ -84,7 +87,7 @@ def register(request):
     except IntegrityError:
         user = User.objects.get(username=username)
     if user.pk is None:
-            return Response({"error": "New user could not be created."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "New user could not be created."}, status=status.HTTP_400_BAD_REQUEST)
 
     # create scout
     Scout.objects.create(user=user, phone_no=phone_no)
@@ -354,3 +357,26 @@ class TenantRetrieveView(RetrieveAPIView):
 
     def get_object(self):
         return get_object_or_404(Tenant.objects.using(settings.HOMES_DB), customer__user=self.request.user)
+
+
+class HouseVisitScoutDetailView(GenericAPIView):
+    serializer_class = ScoutTaskForHouseVisitSerializer
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [TenantAuthentication, ]
+
+    def post(self, request, *args, **kwargs):
+        response_data = {'visits': []}
+        visit_ids = request.data['visits']
+        customer = Customer.objects.using(settings.HOMES_DB).get(user=request.user)
+        for visit_id in visit_ids:
+            get_object_or_404(HouseVisit.objects.using(settings.HOMES_DB), id=visit_id, customer=customer)
+
+            # scout_task False if no Scout Task exists else Yes
+            response_data['visits'].append({'visit_id': visit_id, 'scout_task': False})
+            scout_task = ScoutTask.objects.filter(visit_id=visit_id).first()
+            if scout_task:
+                scout_task_data = ScoutTaskForHouseVisitSerializer(scout_task).data
+                response_data['visits'][-1]['scout_task'] = True
+                response_data['visits'][-1]['data'] = scout_task_data  # Add scout task details to current visit_id
+
+        return JsonResponse(response_data)
