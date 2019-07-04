@@ -1,3 +1,4 @@
+from decouple import config
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from rest_framework import status
@@ -62,7 +63,8 @@ class ConversationListView(ListAPIView):
 
 def send_message_to_receiver_participant_via_socket(data, receiver_participant):
     try:
-        request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id}
+        request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id,
+                        'server_password': config('NODEJS_SERVER_PASSWORD')}
         x = requests.post(NODE_SERVER_CHAT_ENDPOINT, json=request_data)
         print(x.content)
         return x.status_code
