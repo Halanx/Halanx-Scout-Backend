@@ -21,7 +21,7 @@ ENDPOINT = '/chat/'
 if settings.ENVIRONMENT == DEVELOPMENT:
     SCHEME = 'http://'
     URL = '192.168.1.60'
-    PORT = '4001'
+    PORT = '3000'
     NODE_SERVER_CHAT_ENDPOINT = "{}{}:{}{}".format(SCHEME, URL, PORT, ENDPOINT)
 
 else:  # settings.ENVIRONMENT == PRODUCTION:
