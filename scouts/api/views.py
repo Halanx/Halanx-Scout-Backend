@@ -21,7 +21,6 @@ from Homes.Houses.models import HouseVisit
 from Homes.Tenants.models import Tenant
 from Homes.Tenants.serializers import TenantSerializer
 from UserBase.models import Customer
-from chat.api.serializers import ScoutDetailSerializer
 from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
