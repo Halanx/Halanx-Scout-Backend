@@ -85,9 +85,8 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
         data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + str(customer_id)
 
     data['message_data'] = data_copy
-    data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
-
-    z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=data)
+    request_data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
+    z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=request_data)
     sentry_debug_logger.debug('response code is ' + str(z) + str(z.content), exc_info=True)
 
 
