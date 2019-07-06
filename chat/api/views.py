@@ -12,7 +12,7 @@ from chat.api.serializers import ConversationListSerializer, MessageSerializer
 from chat.models import Conversation, Message, Participant, SocketClient
 from chat.paginators import ChatPagination
 from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, SOCKET_STATUS_CONNECTED, SOCKET_STATUS_DISCONNECTED, \
-    NODE_SERVER_CHAT_ENDPOINT
+    NODE_SERVER_CHAT_ENDPOINT, SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX, HALANX_SCOUT_CHAT_API_URL
 from scouts.models import Scout
 from utility.logging_utils import sentry_debug_logger
 from utility.rest_auth_utils import ChatParticipantAuthentication
@@ -62,6 +62,33 @@ class ConversationListView(ListAPIView):
         return data
 
 
+def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_participant):
+    """
+    In this chat when Scout is sending a message we publish message with sender as scout id and receiver as
+    receiving customer id. and if Scout is receiving a message then we publish message with sender as customer_id
+    and receiver as scout id
+    For more reference see Halanx-node/index.js AND
+    Halanx-db/Chat/api/views.py - scout_chat_view
+    SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX used for conversation between scout and customer
+    """
+    if receiver_participant.type == TYPE_SCOUT:
+        scout = receiver_participant.scout
+        scout_id = scout.id
+        data['sender'] = msg.sender.customer_id
+        data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + scout_id
+
+    elif receiver_participant.type == TYPE_CUSTOMER:
+        customer_id = receiver_participant.customer_id
+        data['sender'] = msg.sender.scout.id
+        data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + customer_id
+
+    data['message_data'] = MessageSerializer(msg).data
+    data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
+
+    z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=data)
+    sentry_debug_logger.debug('response code is ' + str(z) + str(z.content), exc_info=True)
+
+
 def send_message_to_receiver_participant_via_socket(data, receiver_participant):
     try:
         request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id,
@@ -94,9 +121,14 @@ class MessageListCreateView(ListCreateAPIView):
                                   receiver=conversation.other_participant(self.requesting_participant))
 
             # Sending Message to Node JS Socket Server via post request
-            send_message_to_receiver_participant_via_socket(
-                data=MessageSerializer(msg, context=self.get_serializer_context()).data,
-                receiver_participant=msg.receiver)
+            message_data = MessageSerializer(msg, context=self.get_serializer_context()).data
+
+            # send_message_to_receiver_participant_via_socket(
+            #     data=message_data,
+            #     receiver_participant=msg.receiver)
+
+            send_message_to_receiver_participant_via_consumer_app(msg=msg, data=message_data,
+                                                                  receiver_participant=msg.receiver)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
