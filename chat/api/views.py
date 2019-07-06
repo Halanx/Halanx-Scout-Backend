@@ -1,3 +1,4 @@
+from copy import deepcopy
 from decouple import config
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -71,6 +72,7 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
     Halanx-db/Chat/api/views.py - scout_chat_view
     SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX used for conversation between scout and customer
     """
+    data_copy = deepcopy(data)
     if receiver_participant.type == TYPE_SCOUT:
         scout = receiver_participant.scout
         scout_id = scout.id
@@ -82,7 +84,7 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
         data['sender'] = msg.sender.scout.id
         data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + str(customer_id)
 
-    data['message_data'] = MessageSerializer(msg).data
+    data['message_data'] = data_copy
     data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
 
     z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=data)
