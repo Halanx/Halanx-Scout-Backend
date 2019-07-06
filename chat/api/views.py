@@ -75,12 +75,12 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
         scout = receiver_participant.scout
         scout_id = scout.id
         data['sender'] = msg.sender.customer_id
-        data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + scout_id
+        data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + str(scout_id)
 
     elif receiver_participant.type == TYPE_CUSTOMER:
         customer_id = receiver_participant.customer_id
         data['sender'] = msg.sender.scout.id
-        data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + customer_id
+        data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + str(customer_id)
 
     data['message_data'] = MessageSerializer(msg).data
     data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
