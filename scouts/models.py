@@ -413,6 +413,6 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
 
             # find another scout for the visit task excluding this scout
             scout = get_appropriate_scout_for_the_house_visit_task(task=task,
-                                                                   scouts=Scout.objects.exclude(id=task.scout.id))
+                                                                   scouts=Scout.objects.exclude(id=instance.scout.id))
 
             ScoutTaskAssignmentRequest.objects.create(task=task, scout=scout)
