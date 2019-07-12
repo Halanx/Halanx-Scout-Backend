@@ -394,8 +394,8 @@ def scout_task_assignment_request_post_save_hook(sender, instance, created, **kw
 
         try:
 
-            send_date = datetime.utcnow() + timedelta(minutes=1)
-            scout_assignment_request_set_rejected.apply_async(["hmm"], eta=send_date)
+            send_date = datetime.utcnow() + timedelta(minutes=2)
+            scout_assignment_request_set_rejected.apply_async([instance.id], eta=send_date)
         except Exception as E:
             sentry_debug_logger.error('error is ' + str(E), exc_info=True)
 
