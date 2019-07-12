@@ -13,7 +13,7 @@ from utility.serializers import DateTimeFieldTZ
 class ScoutDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scout
-        fields = ('name', 'profile_pic_url', 'profile_pic_thumbnail_url')
+        fields = ('name', 'profile_pic_url', 'profile_pic_thumbnail_url', 'phone_no')
 
 
 class CustomerDetailSerializer(serializers.ModelSerializer):

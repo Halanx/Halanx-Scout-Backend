@@ -1,3 +1,5 @@
+import random
+
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.validators import RegexValidator
@@ -416,3 +418,17 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
                                                                    scouts=Scout.objects.exclude(id=instance.scout.id))
 
             ScoutTaskAssignmentRequest.objects.create(task=task, scout=scout)
+
+
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ScoutWorkAddress)
+def scout_work_address_save_task(sender, instance, created, **kwargs):
+    if created:
+        if instance.latitude is None:
+            instance.latitude = random.uniform(28.4595, 28.5355)  # random latitude in Delhi
+
+        if instance.longitude is None:
+            instance.longitude = random.uniform(77.0266, 77.3910)  # random longitude in Delhi
+
+        print("created")
+        instance.save()
