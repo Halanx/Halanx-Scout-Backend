@@ -35,7 +35,7 @@ class ScoutDocumentInline(admin.TabularInline):
 
 @admin.register(Scout)
 class ScoutAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'get_profile_pic_html',)
+    list_display = ('id', 'name', 'get_profile_pic_html', 'active')
     readonly_fields = ('get_profile_pic_html',)
     raw_id_fields = ('user', )
     inlines = (
