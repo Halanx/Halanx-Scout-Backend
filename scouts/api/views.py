@@ -381,7 +381,7 @@ class ScoutTaskCreateView(GenericAPIView):
             scheduled_at = HouseVisit.objects.using(settings.HOMES_DB).get(id=visit_id).scheduled_visit_time
 
             scout_task = ScoutTask.objects.create(category=task_category, house_id=house_id, visit_id=visit_id,
-                                                  scheduled_at=scheduled_at)
+                                                  scheduled_at=scheduled_at, status=UNASSIGNED)
 
             # Select a scout for a particular task and create a Scout Task Assignment Request
             try:
