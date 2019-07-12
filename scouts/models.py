@@ -20,6 +20,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
     REQUEST_REJECTED, ASSIGNED
 from utility.image_utils import compress_image
+from utility.logging_utils import sentry_debug_logger
 
 
 class Scout(models.Model):
@@ -405,4 +406,5 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
             task.save()
         elif instance.status == REQUEST_REJECTED:
             # find some other scout to send notification to
-            pass
+            # create another scout task assignment request
+            sentry_debug_logger.debug('scout rejected the request')

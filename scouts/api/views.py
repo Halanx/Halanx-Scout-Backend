@@ -17,7 +17,8 @@ from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, Cr
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from Homes.Houses.models import HouseVisit
+from Homes.Bookings.models import Booking
+from Homes.Houses.models import HouseVisit, House
 from Homes.Tenants.models import Tenant
 from Homes.Tenants.serializers import TenantSerializer
 from UserBase.models import Customer
@@ -26,8 +27,10 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
     ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer, ScoutTaskForHouseVisitSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
-    ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest
-from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED
+    ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory
+from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
+    HOUSE_VISIT
+from utility.logging_utils import sentry_debug_logger
 from utility.sms_utils import send_sms
 
 
@@ -356,6 +359,44 @@ class TenantRetrieveView(RetrieveAPIView):
 
     def get_object(self):
         return get_object_or_404(Tenant.objects.using(settings.HOMES_DB), customer__user=self.request.user)
+
+
+def get_appropriate_scout_for_the_house_visit_task(task, scouts=Scout.objects.all()):
+    # TODO
+    scouts = random.choice(scouts)
+    selected_scout = random.choice(scouts)
+    sentry_debug_logger.debug("received scout id is " + str(selected_scout.id))
+    return selected_scout
+
+
+class ScoutTaskAssignmentRequestCreateView(GenericAPIView):
+    authentication_classes = []
+    permission_classes = []
+    queryset = ScoutTaskAssignmentRequest.objects.all()
+
+    def post(self, request):
+        print(request)
+        sentry_debug_logger.debug('received scout task assignment', exc_info=True)
+        data = request.data['data']
+        sentry_debug_logger.debug('complete data is ' + str(request.data))
+        if request.data[TASK_TYPE] == HOUSE_VISIT:
+            # Create a task
+
+            task_category = ScoutTaskCategory.objects.filter(name=HOUSE_VISIT)
+            # fetch visit details
+            house_id = House.objects.using(settings.HOMES_DB).get(id=data['house_id']).id
+            visit_id = HouseVisit.objects.using(settings.HOMES_DB).get(id=data['visit_id'], house_id=house_id).id
+            booking_id = Booking.objects.using(settings.HOMES_DB).get(id=data['booking_id'],
+                                                                      space__house__id=house_id).id
+
+            scout_task = ScoutTask.objects.create(category=task_category, house_id=house_id, visit_id=visit_id,
+                                                  booking_id=booking_id)
+
+            # Select a scout for a particular task and create a Scout Task Assignment Request
+            scout = get_appropriate_scout_for_the_house_visit_task(task=scout_task, scouts=Scout.objects.all())
+            ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
+
+        return JsonResponse({'detail': 'done'})
 
 
 class HouseVisitScoutDetailView(GenericAPIView):

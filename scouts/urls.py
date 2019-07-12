@@ -29,4 +29,6 @@ urlpatterns = (
 
     # Scout Details for a house visit
     url('visits/details/', views.HouseVisitScoutDetailView.as_view()),
+
+    url('scout/task/create/', views.ScoutTaskAssignmentRequestCreateView.as_view()),
 )
