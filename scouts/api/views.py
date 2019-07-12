@@ -385,7 +385,9 @@ class ScoutTaskCreateView(GenericAPIView):
 
             # Select a scout for a particular task and create a Scout Task Assignment Request
             try:
-                scout = get_appropriate_scout_for_the_house_visit_task(task=scout_task, scouts=Scout.objects.all())
+                scout = get_appropriate_scout_for_the_house_visit_task(task=scout_task,
+                                                                       scouts=Scout.objects.filter(active=True))
+
                 ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
                 return JsonResponse({'detail': 'done'})
             except Exception as E:
