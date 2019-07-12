@@ -70,7 +70,7 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
     # selected_scout = random.choice(scouts)
     rejected_scouts_id = ScoutTaskAssignmentRequest.objects.filter(task=task, status=REQUEST_REJECTED). \
         values_list('scout', flat=True)
-    scouts = scouts.objects.exclude(id__in=rejected_scouts_id)
-    selected_scout = scouts.objects.get(id=5)  # Ashish Rawat
+    scouts = scouts.exclude(id__in=rejected_scouts_id)
+    selected_scout = scouts.get(id=5)  # Ashish Rawat
     sentry_debug_logger.debug("received scout id is " + str(selected_scout.id))
     return selected_scout
