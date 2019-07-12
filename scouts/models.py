@@ -15,7 +15,7 @@ from chat.models import Conversation, Participant
 from chat.utils import TYPE_SCOUT, TYPE_CUSTOMER
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
-from scouts.tasks import send_scout_notification
+from scouts.tasks import send_scout_notification, scout_assignment_request_set_rejected
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
     get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
@@ -23,6 +23,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
+from datetime import datetime, timedelta
 
 
 class Scout(models.Model):
@@ -391,6 +392,13 @@ def scout_task_assignment_request_post_save_hook(sender, instance, created, **kw
         ScoutNotification.objects.create(category=new_task_notification_category, scout=instance.scout,
                                          payload=NewScoutTaskNotificationSerializer(task).data, display=False)
 
+        try:
+
+            send_date = datetime.utcnow() + timedelta(minutes=2)
+            scout_assignment_request_set_rejected.apply_async(["hmm"], eta=send_date)
+        except Exception as E:
+            sentry_debug_logger.error('error is ' + str(E), exc_info=True)
+
 
 # noinspection PyUnusedLocal
 @receiver(pre_save, sender=ScoutTaskAssignmentRequest)
@@ -415,7 +423,8 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
 
             # find another scout for the visit task excluding this scout
             scout = get_appropriate_scout_for_the_house_visit_task(task=task,
-                                                                   scouts=Scout.objects.exclude(id=instance.scout.id))
+                                                                   scouts=Scout.objects.filter(active=True).exclude(
+                                                                       id=instance.scout.id))
 
             ScoutTaskAssignmentRequest.objects.create(task=task, scout=scout)
 

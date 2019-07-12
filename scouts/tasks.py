@@ -23,3 +23,9 @@ def send_scout_notification(scout_id, title, content, category, payload):
         logger.error(e)
 
     logger.info("Sent notification to scout id {}".format(scout_id))
+
+
+@shared_task
+def scout_assignment_request_set_rejected(text):
+    from utility.logging_utils import sentry_debug_logger
+    sentry_debug_logger.debug("sending it after 2 minutes with data" + str(text), exc_info=True)
