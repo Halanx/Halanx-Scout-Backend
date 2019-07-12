@@ -363,8 +363,9 @@ class TenantRetrieveView(RetrieveAPIView):
 
 def get_appropriate_scout_for_the_house_visit_task(task, scouts=Scout.objects.all()):
     # TODO
-    scouts = random.choice(scouts)
-    selected_scout = random.choice(scouts)
+    # scouts = random.choice(scouts)
+    # selected_scout = random.choice(scouts)
+    selected_scout = Scout.objects.get(id=5)  # Ashish Rawat
     sentry_debug_logger.debug("received scout id is " + str(selected_scout.id))
     return selected_scout
 
