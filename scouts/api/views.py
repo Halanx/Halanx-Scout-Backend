@@ -334,6 +334,7 @@ class ScoutTaskAssignmentRequestUpdateAPIView(AuthenticatedRequestMixin, UpdateA
     queryset = ScoutTaskAssignmentRequest.objects.all()
 
     def get_object(self):
+        sentry_debug_logger.debug("updating task assignment")
         task = get_object_or_404(ScoutTask, pk=self.kwargs.get('pk'), status=UNASSIGNED)
         assignment_request = task.assignment_requests.filter(scout__user=self.request.user,
                                                              status=REQUEST_AWAITED).last()
