@@ -369,7 +369,7 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=Scout.objects.al
     return selected_scout
 
 
-class ScoutTaskAssignmentRequestCreateView(GenericAPIView):
+class ScoutTaskCreateView(GenericAPIView):
     authentication_classes = []
     permission_classes = []
     queryset = ScoutTaskAssignmentRequest.objects.all()
@@ -386,11 +386,8 @@ class ScoutTaskAssignmentRequestCreateView(GenericAPIView):
             # fetch visit details
             house_id = House.objects.using(settings.HOMES_DB).get(id=data['house_id']).id
             visit_id = HouseVisit.objects.using(settings.HOMES_DB).get(id=data['visit_id'], house_id=house_id).id
-            booking_id = Booking.objects.using(settings.HOMES_DB).get(id=data['booking_id'],
-                                                                      space__house__id=house_id).id
 
-            scout_task = ScoutTask.objects.create(category=task_category, house_id=house_id, visit_id=visit_id,
-                                                  booking_id=booking_id)
+            scout_task = ScoutTask.objects.create(category=task_category, house_id=house_id, visit_id=visit_id)
 
             # Select a scout for a particular task and create a Scout Task Assignment Request
             scout = get_appropriate_scout_for_the_house_visit_task(task=scout_task, scouts=Scout.objects.all())
