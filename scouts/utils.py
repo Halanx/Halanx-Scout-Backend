@@ -102,6 +102,7 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
     # DEMO_TESTING = True
     DEMO_TESTING = False
 
+    # Remove all those scouts from the task when request is rejected
     rejected_scouts_id = ScoutTaskAssignmentRequest.objects.filter(task=task, status=REQUEST_REJECTED). \
         values_list('scout', flat=True)
     scouts = scouts.exclude(id__in=rejected_scouts_id)
