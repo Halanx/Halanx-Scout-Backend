@@ -1,8 +1,8 @@
 from decouple import config
+from django.conf import settings
 from geopy import units, distance
 from pyfcm import FCMNotification
 
-from HalanxScout import settings
 from Homes.Houses.models import House
 from utility.logging_utils import sentry_debug_logger
 from utility.random_utils import generate_random_code
