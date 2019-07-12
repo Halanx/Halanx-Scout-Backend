@@ -383,7 +383,7 @@ class ScoutTaskCreateView(GenericAPIView):
         if request.data[TASK_TYPE] == HOUSE_VISIT:
             # Create a task
 
-            task_category = ScoutTaskCategory.objects.filter(name=HOUSE_VISIT)
+            task_category = ScoutTaskCategory.objects.get(name=HOUSE_VISIT)
             # fetch visit details
             house_id = House.objects.using(settings.HOMES_DB).get(id=data['house_id']).id
             visit_id = HouseVisit.objects.using(settings.HOMES_DB).get(id=data['visit_id'], house_id=house_id).id
