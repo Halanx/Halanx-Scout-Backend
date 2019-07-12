@@ -86,6 +86,7 @@ def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=10,
         result.append((scout, exact_distance))
 
     result.sort(key=lambda x: x[1])
+    sentry_debug_logger.debug("sorted scouts are " + str(result))
     return result
 
 
