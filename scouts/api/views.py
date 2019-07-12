@@ -374,7 +374,6 @@ class ScoutTaskCreateView(GenericAPIView):
         sentry_debug_logger.debug('complete data is ' + str(request.data))
         if request.data[TASK_TYPE] == HOUSE_VISIT:
             # Create a task
-
             task_category = ScoutTaskCategory.objects.get(name=HOUSE_VISIT)
             # fetch visit details
             house_id = House.objects.using(settings.HOMES_DB).get(id=data['house_id']).id

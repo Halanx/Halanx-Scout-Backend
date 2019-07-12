@@ -381,6 +381,7 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=ScoutTaskAssignmentRequest)
 def scout_task_assignment_request_post_save_hook(sender, instance, created, **kwargs):
+    # just sending the notification
     task = instance.task
     if created and task:
         new_task_notification_category, _ = ScoutNotificationCategory.objects.get_or_create(name=NEW_TASK_NOTIFICATION)
@@ -404,9 +405,14 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
             task.status = ASSIGNED
             task.assigned_at = instance.responded_at
             task.save()
+
         elif instance.status == REQUEST_REJECTED:
             # find some other scout to send notification to
             # create another scout task assignment request
             sentry_debug_logger.debug('scout rejected the request')
+
             # find another scout for the visit task excluding this scout
-            get_appropriate_scout_for_the_house_visit_task(task=task, scouts=Scout.objects.exclude(id=task.scout.id))
+            scout = get_appropriate_scout_for_the_house_visit_task(task=task,
+                                                                   scouts=Scout.objects.exclude(id=task.scout.id))
+
+            ScoutTaskAssignmentRequest.objects.create(task=task, scout=scout)
