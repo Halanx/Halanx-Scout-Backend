@@ -14,7 +14,7 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView, \
     RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView, GenericAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from Homes.Bookings.models import Booking
@@ -363,8 +363,8 @@ class TenantRetrieveView(RetrieveAPIView):
 
 
 class ScoutTaskCreateView(GenericAPIView):
-    authentication_classes = []
-    permission_classes = []
+    authentication_classes = [BasicAuthentication, ]
+    permission_classes = [IsAdminUser, ]
     queryset = ScoutTaskAssignmentRequest.objects.all()
 
     def post(self, request):
