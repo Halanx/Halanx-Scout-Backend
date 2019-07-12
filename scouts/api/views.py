@@ -383,7 +383,7 @@ class ScoutTaskCreateView(GenericAPIView):
             scout_task = ScoutTask.objects.create(category=task_category, house_id=house_id, visit_id=visit_id,
                                                   scheduled_at=scheduled_at, status=UNASSIGNED)
 
-            scout_task.sub_tasks.add(*task_category.sub_task_categories)
+            scout_task.sub_tasks.add(*list(task_category.sub_task_categories.all()))
 
             # Select a scout for a particular task and create a Scout Task Assignment Request
             try:
