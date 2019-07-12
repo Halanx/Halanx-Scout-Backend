@@ -18,7 +18,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
     get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
-    REQUEST_REJECTED, ASSIGNED
+    REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 
@@ -282,13 +282,13 @@ class ScoutTask(models.Model):
     def visit(self):
         if self.visit_id:
             return (HouseVisit.objects.using(settings.HOMES_DB).select_related('customer')
-                    .filter(id=self.visit_id).first())
+                .filter(id=self.visit_id).first())
 
     @property
     def booking(self):
         if self.booking_id:
             return (Booking.objects.using(settings.HOMES_DB).select_related('tenant__customer')
-                    .filter(id=self.booking_id).first())
+                .filter(id=self.booking_id).first())
 
     @property
     def customer(self):
@@ -408,3 +408,5 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
             # find some other scout to send notification to
             # create another scout task assignment request
             sentry_debug_logger.debug('scout rejected the request')
+            # find another scout for the visit task excluding this scout
+            get_appropriate_scout_for_the_house_visit_task(task=task, scouts=Scout.objects.exclude(id=task.scout.id))

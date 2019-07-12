@@ -29,7 +29,7 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
     ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
-    HOUSE_VISIT
+    HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task
 from utility.logging_utils import sentry_debug_logger
 from utility.sms_utils import send_sms
 
@@ -361,15 +361,6 @@ class TenantRetrieveView(RetrieveAPIView):
         return get_object_or_404(Tenant.objects.using(settings.HOMES_DB), customer__user=self.request.user)
 
 
-def get_appropriate_scout_for_the_house_visit_task(task, scouts=Scout.objects.all()):
-    # TODO
-    # scouts = random.choice(scouts)
-    # selected_scout = random.choice(scouts)
-    selected_scout = Scout.objects.get(id=5)  # Ashish Rawat
-    sentry_debug_logger.debug("received scout id is " + str(selected_scout.id))
-    return selected_scout
-
-
 class ScoutTaskCreateView(GenericAPIView):
     authentication_classes = []
     permission_classes = []
@@ -391,10 +382,13 @@ class ScoutTaskCreateView(GenericAPIView):
             scout_task = ScoutTask.objects.create(category=task_category, house_id=house_id, visit_id=visit_id)
 
             # Select a scout for a particular task and create a Scout Task Assignment Request
-            scout = get_appropriate_scout_for_the_house_visit_task(task=scout_task, scouts=Scout.objects.all())
-            ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
-
-        return JsonResponse({'detail': 'done'})
+            try:
+                scout = get_appropriate_scout_for_the_house_visit_task(task=scout_task, scouts=Scout.objects.all())
+                ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
+                return JsonResponse({'detail': 'done'})
+            except Exception as E:
+                sentry_debug_logger.error('Error while creating new scout with error' + str(E), exc_info=True)
+                return JsonResponse({'detail': 'No new scout found'})
 
 
 class HouseVisitScoutDetailView(GenericAPIView):

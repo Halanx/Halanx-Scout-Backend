@@ -1,6 +1,7 @@
 from decouple import config
 from pyfcm import FCMNotification
 
+from utility.logging_utils import sentry_debug_logger
 from utility.random_utils import generate_random_code
 
 notify_scout = FCMNotification(api_key=config('FCM_SERVER_KEY')).notify_single_device
@@ -56,3 +57,20 @@ ScoutTaskAssignmentRequestStatusCategories = (
 NEW_TASK_NOTIFICATION = 'NewTask'
 TASK_TYPE = 'Task Type'
 HOUSE_VISIT = 'House Visit'
+
+
+def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
+    # TODO
+    from scouts.models import ScoutTaskAssignmentRequest
+    from scouts.models import Scout
+
+    if scouts is None:
+        scouts = Scout.objects.all()
+    # scouts = random.choice(scouts)
+    # selected_scout = random.choice(scouts)
+    rejected_scouts_id = ScoutTaskAssignmentRequest.objects.filter(task=task, status=REQUEST_REJECTED). \
+        values_list('scout', flat=True)
+    scouts = scouts.objects.exclude(id__in=rejected_scouts_id)
+    selected_scout = scouts.objects.get(id=5)  # Ashish Rawat
+    sentry_debug_logger.debug("received scout id is " + str(selected_scout.id))
+    return selected_scout
