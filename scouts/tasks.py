@@ -14,6 +14,7 @@ def send_scout_notification(scout_id, title, content, category, payload):
     scout = Scout.objects.get(id=scout_id)
 
     try:
+        from scouts.utils import notify_scout
         notify_scout(registration_id=scout.gcm_id,
                      data_message={'data': json.dumps({'title': title, 'content': content,
                                                        'category': category, 'payload': payload})})
