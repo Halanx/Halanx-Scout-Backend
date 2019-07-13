@@ -395,7 +395,7 @@ def scout_task_assignment_request_post_save_hook(sender, instance, created, **kw
         try:
             send_date = timezone.now() + timedelta(minutes=2)
             scout_assignment_request_set_rejected.apply_async([instance.id], eta=send_date)
-            sentry_debug_logger.error('sending after 2 minutes', exc_info=True)
+            sentry_debug_logger.debu('sending after 2 minutes', exc_info=True)
         except Exception as E:
             sentry_debug_logger.error('error is ' + str(E), exc_info=True)
 
@@ -426,8 +426,11 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
                                                                    scouts=Scout.objects.filter(active=True).exclude(
                                                                        id=instance.scout.id))
 
-            ScoutTaskAssignmentRequest.objects.create(task=task, scout=scout)
+            if scout:
+                ScoutTaskAssignmentRequest.objects.create(task=task, scout=scout)
 
+            else:
+                sentry_debug_logger.debug("no more scout exists")
 
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=ScoutWorkAddress)
