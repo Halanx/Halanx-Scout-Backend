@@ -390,8 +390,12 @@ class ScoutTaskCreateView(GenericAPIView):
                 scout = get_appropriate_scout_for_the_house_visit_task(task=scout_task,
                                                                        scouts=Scout.objects.filter(active=True))
 
-                ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
-                return JsonResponse({'detail': 'done'})
+                if scout:
+                    ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
+                    return JsonResponse({'detail': 'done'})
+                else:
+                    sentry_debug_logger.error("No scout found")
+                    return JsonResponse({'detail': 'No scout found'}, status=400)
             except Exception as E:
                 sentry_debug_logger.error('Error while creating new scout with error' + str(E), exc_info=True)
                 return JsonResponse({'detail': 'No new scout found'})
