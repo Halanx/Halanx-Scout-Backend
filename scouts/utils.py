@@ -77,6 +77,18 @@ def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=10,
         from scouts.models import Scout
         queryset = Scout.objects.all()
 
+    from scouts.models import Flag
+    # if manual control is enabled switch calls by priority
+    flag = Flag.objects.filter(name='MANUAL_CONTROL_FOR_SCOUTS').first()
+    if flag:
+        if flag.enabled:
+            sentry_debug_logger.debug("using manual control")
+            queryset = queryset.order_by('-priority')
+            result = []
+            for scout in queryset:
+                result.append((scout, 0))  # just random distance (0) in result
+            return result
+
     queryset = get_nearby_scouts(house_latitude, house_longitude, distance_range, queryset)
 
     result = []

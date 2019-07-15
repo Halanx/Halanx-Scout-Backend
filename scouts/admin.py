@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from scouts.models import ScoutPermanentAddress, ScoutBankDetail, ScoutWallet, ScoutWorkAddress, ScoutPicture, Scout, \
     ScoutPayment, ScoutDocument, ScoutNotificationCategory, ScoutNotification, ScoutTaskCategory, ScoutSubTaskCategory, \
-    ScoutTaskReviewTagCategory, ScoutTask, ScoutTaskAssignmentRequest
+    ScoutTaskReviewTagCategory, ScoutTask, ScoutTaskAssignmentRequest, Flag
 
 
 class ScoutPermanentAddressInline(admin.StackedInline):
@@ -35,7 +35,7 @@ class ScoutDocumentInline(admin.TabularInline):
 
 @admin.register(Scout)
 class ScoutAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'get_profile_pic_html', 'active')
+    list_display = ('id', 'name', 'get_profile_pic_html', 'active', 'priority')
     readonly_fields = ('get_profile_pic_html',)
     raw_id_fields = ('user', )
     inlines = (
@@ -116,3 +116,8 @@ class ScoutTaskAdmin(admin.ModelAdmin):
 class ScoutTaskAssignmentRequestAdmin(admin.ModelAdmin):
     list_display = ('id', 'scout', 'task', 'created_at', 'responded_at', 'status')
     raw_id_fields = ('scout', 'task', )
+
+
+@admin.register(Flag)
+class FlagModelAdmin(admin.ModelAdmin):
+    list_display = ['id', 'enabled', 'value']

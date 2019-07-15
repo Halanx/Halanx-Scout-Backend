@@ -26,6 +26,12 @@ from utility.logging_utils import sentry_debug_logger
 from datetime import datetime, timedelta
 
 
+class Flag(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    value = models.CharField(max_length=100, null=True, blank=True)
+    enabled = models.BooleanField(default=True)
+
+
 class Scout(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='scout')
     phone_no = models.CharField(max_length=30, unique=True, validators=[RegexValidator('^[+]*\d{10,}$',
@@ -40,6 +46,7 @@ class Scout(models.Model):
     gcm_id = models.CharField(max_length=500, blank=True, null=True)
     rating = models.FloatField(default=0)
     review_tags = models.ManyToManyField('ScoutTaskReviewTagCategory', blank=True, related_name='scouts')
+    priority = models.IntegerField(default=0)
 
     def __str__(self):
         return "{}:{}".format(self.id, self.phone_no)
