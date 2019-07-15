@@ -356,7 +356,7 @@ def scout_payment_post_save_hook(sender, instance, created, **kwargs):
 @receiver(post_save, sender=ScoutTask)
 def scout_task_post_save_hook(sender, instance, created, **kwargs):
     if created:
-        conversation = Conversation.objects.create(task=instance)
+        conversation, created = Conversation.objects.get_or_create(task=instance)
         customer = instance.customer
         if customer:
             conversation.participants.add(Participant.objects.get_or_create(customer_id=customer.id,
@@ -375,10 +375,12 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
     conversation = instance.conversation
     if old_scout != new_scout:
         if old_scout and old_scout.chat_participant in conversation.participants.all():
-            conversation.participants.remove(old_scout.chat_participant)
+            if old_scout.chat_participant in conversation.participants.all():
+                conversation.participants.remove(old_scout.chat_participant)
 
         if new_scout and new_scout.chat_participant not in conversation.participants.all():
-            conversation.participants.add(new_scout.chat_participant)
+            if new_scout.chat_participant not in conversation.participants.all():
+                conversation.participants.add(new_scout.chat_participant)
 
 
 # noinspection PyUnusedLocal
