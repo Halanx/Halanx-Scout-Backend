@@ -95,7 +95,7 @@ LOGGING = {
         },
     },
     'handlers': {
-        # Send all messages to consoleaffiliate
+        # Send all messages to console
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
