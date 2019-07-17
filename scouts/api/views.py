@@ -309,7 +309,7 @@ class ScoutTaskRetrieveUpdateDestroyAPIView(AuthenticatedRequestMixin, RetrieveU
                                  status=ASSIGNED)
 
     def update(self, request, *args, **kwargs):
-        data = request.POST
+        data = request.data
         task = self.get_object()
         if data.get('complete'):
             task.status = COMPLETE

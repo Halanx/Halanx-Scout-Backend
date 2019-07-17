@@ -389,7 +389,7 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
             conversation.save()
 
         if new_scout and new_scout.chat_participant not in conversation.participants.all():
-            sentry_debug_logger.debug('removing new scout' + str(old_scout))
+            sentry_debug_logger.debug('removing new scout' + str(new_scout))
             conversation.participants.add(new_scout.chat_participant)
             conversation.save()
 
