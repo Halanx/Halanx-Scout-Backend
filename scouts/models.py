@@ -20,7 +20,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
     get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
-    REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task
+    REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 from datetime import datetime, timedelta
@@ -369,18 +369,22 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
 
     old_scout = old_task.scout
     new_scout = instance.scout
+
     conversation = instance.conversation
+
     if conversation:
         if old_scout != new_scout:
             if old_scout and old_scout.chat_participant in conversation.participants.all():
-                sentry_debug_logger.debug('removing old scout ' + str(old_scout))
                 conversation.participants.remove(old_scout.chat_participant)
                 conversation.save()
 
             if new_scout and new_scout.chat_participant not in conversation.participants.all():
-                sentry_debug_logger.debug('removing new scout' + str(new_scout))
                 conversation.participants.add(new_scout.chat_participant)
                 conversation.save()
+
+    if old_task.status == ASSIGNED and instance.status == COMPLETE:
+        ScoutPayment.objects.create(wallet=instance.scout.wallet, amount=instance.category.amount,
+                                    description='Task Completed')
 
 
 # noinspection PyUnusedLocal
@@ -391,7 +395,7 @@ def scout_task_post_save_hook(sender, instance, created, **kwargs):
         customer = instance.customer
         if customer:
             customer_participant, created = Participant.objects.get_or_create(customer_id=customer.id,
-                                                                            type=TYPE_CUSTOMER)
+                                                                              type=TYPE_CUSTOMER)
 
             if customer_participant not in conversation.participants.all():
                 conversation.participants.add(customer_participant)
