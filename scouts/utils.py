@@ -130,3 +130,11 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
     sentry_debug_logger.debug("received scout is " + str(selected_scout))
 
     return selected_scout
+
+
+SCOUT_PAYMENT_MESSAGE = 'Payment for {} on {}'
+
+
+def get_description_for_completion_of_current_task(instance):
+    global SCOUT_PAYMENT_MESSAGE
+    return SCOUT_PAYMENT_MESSAGE.format(instance.category.name, str(instance.scheduled_at))

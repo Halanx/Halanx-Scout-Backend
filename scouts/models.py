@@ -20,7 +20,8 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
     get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
-    REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE
+    REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE, HOUSE_VISIT, \
+    SCOUT_PAYMENT_MESSAGE, get_description_for_completion_of_current_task
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 from datetime import datetime, timedelta
@@ -360,7 +361,6 @@ def scout_payment_post_save_hook(sender, instance, created, **kwargs):
     wallet.save()
 
 
-# noinspection PyUnusedLocal
 @receiver(pre_save, sender=ScoutTask)
 def scout_task_pre_save_hook(sender, instance, **kwargs):
     old_task = ScoutTask.objects.filter(id=instance.id).first()
@@ -383,8 +383,9 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
                 conversation.save()
 
     if old_task.status == ASSIGNED and instance.status == COMPLETE:
+        instance.completed_at = datetime.now()
         ScoutPayment.objects.create(wallet=instance.scout.wallet, amount=instance.category.earning,
-                                    description='Task Completed')
+                                    description=get_description_for_completion_of_current_task(instance))
 
 
 # noinspection PyUnusedLocal
