@@ -211,6 +211,7 @@ class ScheduledAvailability(models.Model):
 class ScoutTaskCategory(models.Model):
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=get_scout_task_category_image_upload_path, null=True, blank=True)
+    earning = models.FloatField(default=0)
 
     class Meta:
         verbose_name_plural = 'Scout task categories'

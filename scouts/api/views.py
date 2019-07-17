@@ -381,7 +381,8 @@ class ScoutTaskCreateView(GenericAPIView):
             scheduled_at = HouseVisit.objects.using(settings.HOMES_DB).get(id=visit_id).scheduled_visit_time
 
             scout_task = ScoutTask.objects.create(category=task_category, house_id=house_id, visit_id=visit_id,
-                                                  scheduled_at=scheduled_at, status=UNASSIGNED)
+                                                  scheduled_at=scheduled_at, status=UNASSIGNED,
+                                                  earning=task_category.earning)
 
             scout_task.sub_tasks.add(*list(task_category.sub_task_categories.all()))
 
