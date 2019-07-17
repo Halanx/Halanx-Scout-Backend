@@ -383,7 +383,7 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
                 conversation.save()
 
     if old_task.status == ASSIGNED and instance.status == COMPLETE:
-        ScoutPayment.objects.create(wallet=instance.scout.wallet, amount=instance.category.amount,
+        ScoutPayment.objects.create(wallet=instance.scout.wallet, amount=instance.category.earning,
                                     description='Task Completed')
 
 
