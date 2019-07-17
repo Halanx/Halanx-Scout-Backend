@@ -366,7 +366,7 @@ def scout_payment_pre_save_hook(sender, instance, **kwargs):
         new_payment_received_notification_category, _ = ScoutNotificationCategory.objects.\
             get_or_create(name=NEW_PAYMENT_RECEIVED)
 
-        ScoutNotification.objects.create(category=new_payment_received_notification_category, scout=instance.scout,
+        ScoutNotification.objects.create(category=new_payment_received_notification_category, scout=instance.wallet.scout,
                                          payload=ScoutPaymentSerializer(instance).data, display=True)
 
 
