@@ -111,32 +111,21 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
     if scouts is None:
         scouts = Scout.objects.all()
 
-    # DEMO_TESTING = True
-    DEMO_TESTING = False
-
     # Remove all those scouts from the task when request is rejected
     rejected_scouts_id = ScoutTaskAssignmentRequest.objects.filter(task=task, status=REQUEST_REJECTED). \
         values_list('scout', flat=True)
     scouts = scouts.exclude(id__in=rejected_scouts_id)
 
-    if DEMO_TESTING:
-        try:
-            selected_scout = scouts.get(id=5)  # Ashish Rawat
-        except Exception as E:
-            sentry_debug_logger.debug("error while selecting Ashish" + str(E))
-            selected_scout = scouts.get(id=8)  # Mayank verma
+    house = House.objects.using(settings.HOMES_DB).get(id=task.house_id)
+    sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
+                                             house_longitude=house.address.longitude,
+                                             distance_range=15, queryset=scouts)
 
-    else:
-        house = House.objects.using(settings.HOMES_DB).get(id=task.house_id)
-        sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
-                                                 house_longitude=house.address.longitude,
-                                                 distance_range=15, queryset=scouts)
-
-        try:
-            selected_scout = sorted_scouts[0][0]
-        except Exception as E:
-            sentry_debug_logger.debug('error in non demo testing is  ' + str(E), exc_info=True)
-            selected_scout = None
+    try:
+        selected_scout = sorted_scouts[0][0]
+    except Exception as E:
+        sentry_debug_logger.debug('error in non demo testing is  ' + str(E), exc_info=True)
+        selected_scout = None
 
     sentry_debug_logger.debug("received scout is " + str(selected_scout))
 
