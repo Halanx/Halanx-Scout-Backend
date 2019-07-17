@@ -1,3 +1,5 @@
+import json
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -136,10 +138,18 @@ class ScoutNotificationCategorySerializer(serializers.ModelSerializer):
 class ScoutNotificationSerializer(serializers.ModelSerializer):
     timestamp = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT)
     category = ScoutNotificationCategorySerializer()
+    payload = serializers.SerializerMethodField()
 
     class Meta:
         model = ScoutNotification
         fields = '__all__'
+
+    @staticmethod
+    def get_payload(obj):
+        try:
+            return json.loads(json.dumps(obj.payload))
+        except:
+            return obj.payload
 
 
 class ScoutWalletSerializer(serializers.ModelSerializer):
