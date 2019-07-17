@@ -25,6 +25,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 from datetime import datetime, timedelta
+from django.contrib.auth.signals import user_logged_out
 
 
 class Flag(models.Model):
@@ -476,3 +477,13 @@ def scout_work_address_save_task(sender, instance, created, **kwargs):
 
         print("created")
         instance.save()
+
+
+@receiver(user_logged_out)
+def user_logged_out(sender, user, **kwargs):
+    try:
+        scout = user.scout
+        scout.active = False
+        scout.save()
+    except Scout.DoesNotExist:
+        sentry_debug_logger.debug('no scout found', exc_info=True)
