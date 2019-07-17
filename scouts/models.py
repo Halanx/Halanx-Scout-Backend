@@ -360,17 +360,6 @@ def scout_payment_post_save_hook(sender, instance, created, **kwargs):
 
 
 # noinspection PyUnusedLocal
-@receiver(post_save, sender=ScoutTask)
-def scout_task_post_save_hook(sender, instance, created, **kwargs):
-    if created:
-        conversation, created = Conversation.objects.get_or_create(task=instance)
-        customer = instance.customer
-        if customer:
-            conversation.participants.add(Participant.objects.get_or_create(customer_id=customer.id,
-                                                                            type=TYPE_CUSTOMER)[0])
-
-
-# noinspection PyUnusedLocal
 @receiver(pre_save, sender=ScoutTask)
 def scout_task_pre_save_hook(sender, instance, **kwargs):
     old_task = ScoutTask.objects.filter(id=instance.id).first()
@@ -380,18 +369,31 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
     old_scout = old_task.scout
     new_scout = instance.scout
     conversation = instance.conversation
-    sentry_debug_logger.debug('old scout is ' + str(old_scout))
-    sentry_debug_logger.debug('new scout is ' + str(new_scout))
-    if old_scout != new_scout:
-        if old_scout and old_scout.chat_participant in conversation.participants.all():
-            sentry_debug_logger.debug('removing old scout ' + str(old_scout))
-            conversation.participants.remove(old_scout.chat_participant)
-            conversation.save()
+    if conversation:
+        if old_scout != new_scout:
+            if old_scout and old_scout.chat_participant in conversation.participants.all():
+                sentry_debug_logger.debug('removing old scout ' + str(old_scout))
+                conversation.participants.remove(old_scout.chat_participant)
+                conversation.save()
 
-        if new_scout and new_scout.chat_participant not in conversation.participants.all():
-            sentry_debug_logger.debug('removing new scout' + str(new_scout))
-            conversation.participants.add(new_scout.chat_participant)
-            conversation.save()
+            if new_scout and new_scout.chat_participant not in conversation.participants.all():
+                sentry_debug_logger.debug('removing new scout' + str(new_scout))
+                conversation.participants.add(new_scout.chat_participant)
+                conversation.save()
+
+
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ScoutTask)
+def scout_task_post_save_hook(sender, instance, created, **kwargs):
+    if created:
+        conversation, created = Conversation.objects.get_or_create(task=instance)
+        customer = instance.customer
+        if customer:
+            customer_participant, created = Participant.objects.get_or_create(customer_id=customer.id,
+                                                                            type=TYPE_CUSTOMER)
+
+            if customer_participant not in conversation.participants.all():
+                conversation.participants.add(customer_participant)
 
 
 # noinspection PyUnusedLocal
