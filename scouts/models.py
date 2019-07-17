@@ -353,6 +353,16 @@ def scout_picture_post_save_task(sender, instance, *args, **kwargs):
 
 
 # noinspection PyUnusedLocal
+@receiver(pre_save, sender=ScoutPayment)
+def scout_payment_pre_save_hook(sender, instance, **kwargs):
+    old_payment = ScoutPayment.objects.filter(id=instance.id).first()
+    if not old_payment:
+        return
+
+    if old_payment.status == PENDING and instance.status == PAID:
+        instance.paid_on = datetime.now()
+
+
 @receiver(post_save, sender=ScoutPayment)
 def scout_payment_post_save_hook(sender, instance, created, **kwargs):
     wallet = instance.wallet
