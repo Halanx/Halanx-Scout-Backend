@@ -137,4 +137,4 @@ SCOUT_PAYMENT_MESSAGE = 'Payment for {} on {}'
 
 def get_description_for_completion_of_current_task(instance):
     global SCOUT_PAYMENT_MESSAGE
-    return SCOUT_PAYMENT_MESSAGE.format(instance.category.name, str(instance.scheduled_at))
+    return SCOUT_PAYMENT_MESSAGE.format(instance.category.name, str(instance.scheduled_at.strftime("%B %d")))
