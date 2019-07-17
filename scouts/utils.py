@@ -57,6 +57,8 @@ ScoutTaskAssignmentRequestStatusCategories = (
 
 # predefined scout notification categories
 NEW_TASK_NOTIFICATION = 'NewTask'
+NEW_PAYMENT_RECEIVED = 'NewPaymentReceived'
+
 TASK_TYPE = 'task_type'
 HOUSE_VISIT = 'House Visit'
 
@@ -104,7 +106,6 @@ def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=10,
 
 
 def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
-    # TODO
     from scouts.models import ScoutTaskAssignmentRequest
     from scouts.models import Scout
 

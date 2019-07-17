@@ -21,7 +21,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
     REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE, HOUSE_VISIT, \
-    SCOUT_PAYMENT_MESSAGE, get_description_for_completion_of_current_task
+    SCOUT_PAYMENT_MESSAGE, get_description_for_completion_of_current_task, NEW_PAYMENT_RECEIVED
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 from datetime import datetime, timedelta
@@ -362,6 +362,12 @@ def scout_payment_pre_save_hook(sender, instance, **kwargs):
 
     if old_payment.status == PENDING and instance.status == PAID:
         instance.paid_on = datetime.now()
+        from scouts.api.serializers import ScoutPaymentSerializer
+        new_payment_received_notification_category, _ = ScoutNotificationCategory.objects.\
+            get_or_create(name=NEW_PAYMENT_RECEIVED)
+
+        ScoutNotification.objects.create(category=new_payment_received_notification_category, scout=instance.scout,
+                                         payload=ScoutPaymentSerializer(instance).data, display=True)
 
 
 @receiver(post_save, sender=ScoutPayment)
