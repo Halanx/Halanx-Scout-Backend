@@ -81,7 +81,7 @@ class ScoutNotificationAdmin(admin.ModelAdmin):
 
 @admin.register(ScoutTaskCategory)
 class ScoutTaskCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'get_scout_task_category_image_html')
+    list_display = ('name', 'get_scout_task_category_image_html', 'earning')
     readonly_fields = ('get_scout_task_category_image_html',)
 
 
