@@ -267,7 +267,7 @@ class ScoutNotificationListView(AuthenticatedRequestMixin, ListAPIView):
         queryset = scout.notifications.filter(display=True).order_by('-timestamp').all()[:30]
         data = self.get_serializer(queryset, many=True).data
         scout.notifications.all().update(seen=True)
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK, content_type='application/json')
 
 
 class ScoutWalletRetrieveView(AuthenticatedRequestMixin, RetrieveAPIView):
