@@ -485,5 +485,5 @@ def user_logged_out(sender, user, **kwargs):
         scout = user.scout
         scout.active = False
         scout.save()
-    except Scout.DoesNotExist:
-        sentry_debug_logger.debug('no scout found', exc_info=True)
+    except Exception as E:
+        sentry_debug_logger.debug('no scout found' + str(E), exc_info=True)
