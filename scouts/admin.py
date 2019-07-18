@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from scouts.models import ScoutPermanentAddress, ScoutBankDetail, ScoutWallet, ScoutWorkAddress, ScoutPicture, Scout, \
     ScoutPayment, ScoutDocument, ScoutNotificationCategory, ScoutNotification, ScoutTaskCategory, ScoutSubTaskCategory, \
-    ScoutTaskReviewTagCategory, ScoutTask, ScoutTaskAssignmentRequest, Flag
+    ScoutTaskReviewTagCategory, ScoutTask, ScoutTaskAssignmentRequest, Flag, ScheduledAvailability
 
 
 class ScoutPermanentAddressInline(admin.StackedInline):
@@ -118,6 +118,11 @@ class ScoutTaskAssignmentRequestAdmin(admin.ModelAdmin):
     raw_id_fields = ('scout', 'task',)
 
 
+@admin.register(ScheduledAvailability)
+class ScheduledAvailiabilityModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'scout', 'start_time', 'end_time', 'cancelled')
+
 @admin.register(Flag)
 class FlagModelAdmin(admin.ModelAdmin):
     list_display = ['id', 'enabled', 'value']
+

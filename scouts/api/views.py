@@ -473,7 +473,6 @@ def rate_scout(request):
                 else:
                     scout.review_tags.remove(review_tag)
 
-
             scout_task.rating_given = True
             scout_task.save()
             success_response = {STATUS: SUCCESS, DATA: {'rating': scout_task.scout.rating}}
