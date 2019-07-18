@@ -14,14 +14,17 @@ from Homes.Houses.models import HouseVisit
 from chat.models import Conversation, Participant
 from chat.utils import TYPE_SCOUT, TYPE_CUSTOMER
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
-from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories
+from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories, WITHDRAWAL, \
+    PaymentTypeCategories, DEPOSIT
 from scouts.tasks import send_scout_notification, scout_assignment_request_set_rejected
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
     get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
     REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE, HOUSE_VISIT, \
-    SCOUT_PAYMENT_MESSAGE, get_description_for_completion_of_current_task, NEW_PAYMENT_RECEIVED
+    SCOUT_PAYMENT_MESSAGE, get_description_for_completion_of_current_task, NEW_PAYMENT_RECEIVED, \
+    get_description_for_completion_of_current_task_and_receiving_payment_in_wallet, \
+    get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 from datetime import datetime, timedelta
@@ -109,7 +112,7 @@ class ScoutPayment(models.Model):
     status = models.CharField(max_length=30, default=PENDING, choices=PaymentStatusCategories)
     due_date = models.DateTimeField(blank=True, null=True)
     paid_on = models.DateTimeField(blank=True, null=True)
-
+    type = models.CharField(max_length=30, default=WITHDRAWAL, choices=PaymentTypeCategories)
     timestamp = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -363,18 +366,22 @@ def scout_payment_pre_save_hook(sender, instance, **kwargs):
     if old_payment.status == PENDING and instance.status == PAID:
         instance.paid_on = datetime.now()
         from scouts.api.serializers import ScoutPaymentSerializer
-        new_payment_received_notification_category, _ = ScoutNotificationCategory.objects.\
+        new_payment_received_notification_category, _ = ScoutNotificationCategory.objects. \
             get_or_create(name=NEW_PAYMENT_RECEIVED)
 
-        ScoutNotification.objects.create(category=new_payment_received_notification_category, scout=instance.wallet.scout,
+        ScoutNotification.objects.create(category=new_payment_received_notification_category,
+                                         scout=instance.wallet.scout,
                                          payload=ScoutPaymentSerializer(instance).data, display=True)
 
 
 @receiver(post_save, sender=ScoutPayment)
 def scout_payment_post_save_hook(sender, instance, created, **kwargs):
     wallet = instance.wallet
-    wallet.debit = sum(payment.amount for payment in wallet.payments.filter(status=PAID))
-    wallet.pending_withdrawal = sum(payment.amount for payment in wallet.payments.filter(status=PENDING))
+    wallet.debit = sum(payment.amount for payment in wallet.payments.filter(type=WITHDRAWAL, status=PAID))
+    wallet.credit = sum(payment.amount for payment in wallet.payments.filter(type=DEPOSIT, status=PAID))
+    wallet.pending_deposit = sum(payment.amount for payment in wallet.payments.filter(type=DEPOSIT, status=PENDING))
+    wallet.pending_withdrawal = sum(payment.amount for payment in wallet.payments.filter(type=WITHDRAWAL,
+                                                                                         status=PENDING))
     wallet.save()
 
 
@@ -401,8 +408,21 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
 
     if old_task.status == ASSIGNED and instance.status == COMPLETE:
         instance.completed_at = datetime.now()
-        ScoutPayment.objects.create(wallet=instance.scout.wallet, amount=instance.category.earning,
-                                    description=get_description_for_completion_of_current_task(instance))
+
+        # 1 Create a payment that shows amount to be deposited in the wallet by the company
+        ScoutPayment.objects.create(
+            wallet=instance.scout.wallet,
+            amount=instance.category.earning,
+            description=get_description_for_completion_of_current_task_and_receiving_payment_in_wallet(instance),
+            type=DEPOSIT, status=PENDING)
+
+        # 2 Create a payment that shows amount to be withdrawn from the wallet by the user
+        ScoutPayment.objects.create(
+            wallet=instance.scout.wallet, amount=instance.category.earning,
+            description=get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account(instance),
+            type=WITHDRAWAL, status=PENDING)
+
+        # Note: Both the above payments are to be verified by company by changing the status to paid
 
 
 # noinspection PyUnusedLocal
