@@ -430,10 +430,10 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
         # Note: Both the above payments are to be verified by company by changing the status to paid
 
     # Manage rating given to Scout
-    if old_task.rating_given == False and instance.rating_given == True:
+    if not old_task.rating_given and instance.rating_given:
         scout = instance.scout
         previous_ratings = ScoutTask.objects.filter(scout=scout)
-        scout.rating = (previous_ratings.aggregate(Sum('rating')) + instance.rating) / (len(previous_ratings) + 1)
+        scout.rating = (previous_ratings.aggregate(Sum('rating'))['rating__sum'] + instance.rating) / (len(previous_ratings) + 1)
         scout.save()
 
 
