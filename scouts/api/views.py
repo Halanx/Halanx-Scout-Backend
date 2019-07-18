@@ -440,7 +440,7 @@ def rate_scout(request):
     if rating < 1 or rating > 5:
         return Response({STATUS: ERROR, 'message': 'Rating must lie between 1 to 5'})
 
-    scout_task = ScoutTask.objects.get(scout__id=scout_id, task__id=task_id, rating_given=False)
+    scout_task = ScoutTask.objects.get(scout__id=scout_id, id=task_id, rating_given=False)
     customer = Customer.objects.using(settings.HOMES_DB).get(user=request.user)
     task_customer = None  # to verify the same customer
 
