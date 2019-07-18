@@ -133,8 +133,8 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
     return selected_scout
 
 
-SCOUT_PAYMENT_MESSAGE_WALLET = 'Payment for {} on {} credited to your wallet'
-SCOUT_PAYMENT_MESSAGE_BANK = 'Payment for {} on {} credited to your bank account and debited from wallet'
+SCOUT_PAYMENT_MESSAGE_WALLET = 'Payment for {} on {}'  # credited to your wallet'
+SCOUT_PAYMENT_MESSAGE_BANK = 'Payment for {} on {}'  # credited to your bank account and debited from wallet'
 
 
 def get_description_for_completion_of_current_task_and_receiving_payment_in_wallet(instance):
