@@ -37,7 +37,7 @@ class ScoutDocumentInline(admin.TabularInline):
 class ScoutAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'get_profile_pic_html', 'active', 'priority')
     readonly_fields = ('get_profile_pic_html',)
-    raw_id_fields = ('user', )
+    raw_id_fields = ('user',)
     inlines = (
         ScoutPermanentAddressInline,
         ScoutWorkAddressInline,
@@ -57,8 +57,8 @@ class ScoutAdmin(admin.ModelAdmin):
 
 @admin.register(ScoutPayment)
 class ScoutPaymentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'wallet', 'amount', 'status', 'due_date', 'paid_on')
-    raw_id_fields = ('wallet', )
+    list_display = ('id', 'wallet', 'amount', 'status', 'due_date', 'paid_on', 'type')
+    raw_id_fields = ('wallet',)
 
 
 @admin.register(ScoutWallet)
@@ -69,14 +69,14 @@ class ScoutWalletAdmin(admin.ModelAdmin):
 @admin.register(ScoutNotificationCategory)
 class ScoutNotificationCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_notification_category_image_html')
-    readonly_fields = ('get_notification_category_image_html', )
+    readonly_fields = ('get_notification_category_image_html',)
 
 
 @admin.register(ScoutNotification)
 class ScoutNotificationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'scout', 'category', 'content', 'get_notification_image_html', )
-    search_fields = ('scout__first_name', 'scout__phone_no', )
-    list_filter = ('category', )
+    list_display = ('id', 'scout', 'category', 'content', 'get_notification_image_html',)
+    search_fields = ('scout__first_name', 'scout__phone_no',)
+    list_filter = ('category',)
 
 
 @admin.register(ScoutTaskCategory)
@@ -92,7 +92,7 @@ class ScoutSubTaskCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(ScoutTaskReviewTagCategory)
 class ScoutTaskReviewTagCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', )
+    list_display = ('name',)
 
 
 class ScoutSubTaskCategoryInline(admin.StackedInline):
@@ -109,13 +109,13 @@ class ScoutTaskReviewTagCategoryInline(admin.StackedInline):
 class ScoutTaskAdmin(admin.ModelAdmin):
     list_display = ('id', 'scout', 'category', 'status', 'earning', 'visit_id')
     filter_horizontal = ('sub_tasks', 'review_tags',)
-    raw_id_fields = ('scout', )
+    raw_id_fields = ('scout',)
 
 
 @admin.register(ScoutTaskAssignmentRequest)
 class ScoutTaskAssignmentRequestAdmin(admin.ModelAdmin):
     list_display = ('id', 'scout', 'task', 'created_at', 'responded_at', 'status')
-    raw_id_fields = ('scout', 'task', )
+    raw_id_fields = ('scout', 'task',)
 
 
 @admin.register(Flag)
