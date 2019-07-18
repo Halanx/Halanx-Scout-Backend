@@ -432,7 +432,7 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
     # Manage rating given to Scout
     if not old_task.rating_given and instance.rating_given and instance.status == COMPLETE:
         scout = instance.scout
-        other_ratings = ScoutTask.objects.filter(scout=scout, complete=True, rating_given=True).exclude(id=instance.id)
+        other_ratings = ScoutTask.objects.filter(scout=scout, status=COMPLETE, rating_given=True).exclude(id=instance.id)
         scout.rating = other_ratings.aggregate(Sum('rating'))['rating__sum'] + \
                        (instance.rating / (len(other_ratings) + 1))
         scout.save()
