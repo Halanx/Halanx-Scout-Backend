@@ -365,12 +365,14 @@ def scout_payment_pre_save_hook(sender, instance, **kwargs):
     if old_payment.status == PENDING and instance.status == PAID:
         instance.paid_on = datetime.now()
         from scouts.api.serializers import ScoutPaymentSerializer
-        new_payment_received_notification_category, _ = ScoutNotificationCategory.objects. \
-            get_or_create(name=NEW_PAYMENT_RECEIVED)
 
-        ScoutNotification.objects.create(category=new_payment_received_notification_category,
-                                         scout=instance.wallet.scout,
-                                         payload=ScoutPaymentSerializer(instance).data, display=True)
+        if instance.type == WITHDRAWAL:
+            new_payment_received_notification_category, _ = ScoutNotificationCategory.objects. \
+                get_or_create(name=NEW_PAYMENT_RECEIVED)
+
+            ScoutNotification.objects.create(category=new_payment_received_notification_category,
+                                             scout=instance.wallet.scout,
+                                             payload=ScoutPaymentSerializer(instance).data, display=True)
 
 
 @receiver(post_save, sender=ScoutPayment)
