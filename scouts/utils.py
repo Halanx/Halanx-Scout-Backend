@@ -127,6 +127,7 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
         scouts = scouts.filter(Q(scheduled_availabilities__start_time__lte=house_visit.scheduled_visit_time) &
                                Q(scheduled_availabilities__end_time__gte=house_visit.scheduled_visit_time) &
                                Q(scheduled_availabilities__cancelled=False))
+
         sentry_debug_logger.debug('after filtering by scheduled availabilities' + str(scouts))
 
     sentry_debug_logger.debug("latitude is " + str(house.address.latitude))
