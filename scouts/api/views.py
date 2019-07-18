@@ -22,7 +22,7 @@ from Homes.Houses.models import HouseVisit, House
 from Homes.Tenants.models import Tenant
 from Homes.Tenants.serializers import TenantSerializer
 from UserBase.models import Customer
-from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING
+from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING, WITHDRAWAL, DEPOSIT
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
     ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer, ScoutTaskForHouseVisitSerializer
@@ -286,8 +286,10 @@ class ScoutPaymentListView(AuthenticatedRequestMixin, ListAPIView):
         wallet = get_object_or_404(ScoutWallet, scout__user=self.request.user)
         payments = wallet.payments.all().order_by('-timestamp')
         payment_status = self.request.GET.get('status')
-        if payment_status in [PAID, PENDING]:
-            payments = payments.filter(status=payment_status)
+        if payment_status in [PAID, ]:
+            payments = payments.filter(status=PAID, type=WITHDRAWAL)
+        elif payment_status in [PENDING, ]:
+            payments = payments.filter(status=PENDING, type=DEPOSIT)
         return payments
 
 
