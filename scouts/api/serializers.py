@@ -161,7 +161,7 @@ class ScoutWalletSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_total_earning(obj):
-        return obj.debit + obj.pending_withdrawal
+        return obj.credit + obj.pending_deposit
 
 
 class ScoutPaymentSerializer(serializers.ModelSerializer):
