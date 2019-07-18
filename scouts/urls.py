@@ -31,4 +31,6 @@ urlpatterns = (
     url('visits/details/', views.HouseVisitScoutDetailView.as_view()),
 
     url('^task/create/', views.ScoutTaskCreateView.as_view()),
+    url('^task/rate/', views.rate_scout),
+
 )

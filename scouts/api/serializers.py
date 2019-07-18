@@ -246,5 +246,5 @@ class ScoutTaskForHouseVisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ScoutTask
-        fields = ('scout', 'category', 'status', 'house_id', 'visit_id', 'booking_id', 'scheduled_at', 'assigned_at',
+        fields = ('id', 'scout', 'category', 'status', 'house_id', 'visit_id', 'booking_id', 'scheduled_at', 'assigned_at',
                   'completed_at')

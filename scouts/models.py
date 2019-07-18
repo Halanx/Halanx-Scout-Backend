@@ -286,6 +286,8 @@ class ScoutTask(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     rating = models.PositiveIntegerField(default=0)
+    rating_given = models.BooleanField(default=False)
+
     remark = models.TextField(blank=True, null=True)
     review_tags = models.ManyToManyField('ScoutTaskReviewTagCategory', blank=True, related_name='tasks')
     payment = models.ForeignKey('ScoutPayment', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')

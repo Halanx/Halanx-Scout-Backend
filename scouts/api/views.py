@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import status, exceptions
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404, RetrieveUpdateAPIView, CreateAPIView, ListCreateAPIView, \
     RetrieveUpdateDestroyAPIView, DestroyAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView, GenericAPIView
@@ -31,6 +31,7 @@ from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvai
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
     HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task
 from utility.logging_utils import sentry_debug_logger
+from utility.render_response_utils import SUCCESS, STATUS, DATA
 from utility.sms_utils import send_sms
 
 
@@ -425,3 +426,22 @@ class HouseVisitScoutDetailView(GenericAPIView):
                 response_data['visits'][-1]['data'] = scout_task_data  # Add scout task details to current visit_id
 
         return JsonResponse(response_data)
+
+
+@api_view(['POST'])
+@authentication_classes((TenantAuthentication,))
+@permission_classes((IsAuthenticated,))
+def rate_scout(request):
+    data = request.data
+    scout_id = data['scout_id']
+    task_id = data['task_id']
+    rating = data['rating']
+    scout_task = ScoutTask.objects.get(scout__id=scout_id, task__id=task_id, rating_given=False)
+    customer = Customer.objects.using(settings.HOMES_DB).get(user=request.user)
+    booking = Booking.objects.using(settings.HOMES_DB).get(id=scout_task.booking_id)
+    if booking.tenant.customer == customer:
+        scout_task.rating = rating
+        scout_task.rating_given = True
+        scout_task.save()
+        success_response = {STATUS: SUCCESS, DATA: {'rating': scout_task.scout.rating}}
+        return Response(success_response)
