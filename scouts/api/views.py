@@ -454,14 +454,25 @@ def rate_scout(request):
             return Response({STATUS: ERROR, 'message': 'No task category found'})
 
         if task_customer == customer:
+
+            # Manage Rating and Reviewing
+
             scout_task.rating = rating
 
             for review_tag_id in review_tag_ids:
                 review_tag = ScoutTaskReviewTagCategory.objects.get(id=review_tag_id)
+
                 if review_tag not in scout_task.review_tags.all():
                     scout_task.review_tags.add(review_tag)
                 else:
-                    scout_task.review_tags.add(review_tag)
+                    scout_task.review_tags.remove(review_tag)
+
+                scout = scout_task.scout
+                if review_tag not in scout.review_tags.all():
+                    scout.review_tags.add(review_tag)
+                else:
+                    scout.review_tags.remove(review_tag)
+
 
             scout_task.rating_given = True
             scout_task.save()
