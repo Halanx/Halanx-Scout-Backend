@@ -31,7 +31,7 @@ from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvai
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
     HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task
 from utility.logging_utils import sentry_debug_logger
-from utility.render_response_utils import SUCCESS, STATUS, DATA
+from utility.render_response_utils import SUCCESS, STATUS, DATA, ERROR
 from utility.sms_utils import send_sms
 
 
@@ -438,8 +438,16 @@ def rate_scout(request):
     rating = data['rating']
     scout_task = ScoutTask.objects.get(scout__id=scout_id, task__id=task_id, rating_given=False)
     customer = Customer.objects.using(settings.HOMES_DB).get(user=request.user)
-    booking = Booking.objects.using(settings.HOMES_DB).get(id=scout_task.booking_id)
-    if booking.tenant.customer == customer:
+    task_customer = None  # to verify the same customer
+
+    if scout_task.category == ScoutTaskCategory.objects.filter(name=HOUSE_VISIT).first():
+        house_visit = HouseVisit.objects.using(settings.HOMES_DB).get(id=scout_task.visit_id)
+        task_customer = house_visit.customer
+
+    else:
+        return Response({STATUS: ERROR, 'message': 'No task category found'})
+
+    if task_customer.customer == customer:
         scout_task.rating = rating
         scout_task.rating_given = True
         scout_task.save()
