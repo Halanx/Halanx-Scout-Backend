@@ -289,7 +289,7 @@ class ScoutPaymentListView(AuthenticatedRequestMixin, ListAPIView):
         if payment_status in [PAID, ]:
             payments = payments.filter(status=PAID, type=WITHDRAWAL)
         elif payment_status in [PENDING, ]:
-            payments = payments.filter(status=PENDING, type=DEPOSIT)
+            payments = payments.filter(status=PENDING, type=WITHDRAWAL)
         return payments
 
 
