@@ -461,3 +461,5 @@ def rate_scout(request):
 
     except Exception as E:
         sentry_debug_logger.debug('some error occured' + str(E), exc_info=True)
+        error_response = {STATUS: ERROR, 'message': 'Some error occured'}
+        return Response(error_response)
