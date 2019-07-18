@@ -451,7 +451,7 @@ def rate_scout(request):
     else:
         return Response({STATUS: ERROR, 'message': 'No task category found'})
 
-    if task_customer.customer == customer:
+    if task_customer == customer:
         scout_task.rating = rating
         scout_task.rating_given = True
         scout_task.save()
