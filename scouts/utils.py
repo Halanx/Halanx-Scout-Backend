@@ -1,9 +1,10 @@
 from decouple import config
 from django.conf import settings
+from django.db.models import Q
 from geopy import units, distance
 from pyfcm import FCMNotification
 
-from Homes.Houses.models import House
+from Homes.Houses.models import House, HouseVisit
 from utility.logging_utils import sentry_debug_logger
 from utility.random_utils import generate_random_code
 
@@ -109,6 +110,9 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
     from scouts.models import ScoutTaskAssignmentRequest
     from scouts.models import Scout
 
+    house = House.objects.using(settings.HOMES_DB).get(id=task.house_id)
+    house_visit = HouseVisit.objects.using(settings.HOMES_DB).filter(id=task.visit_id).first()
+
     if scouts is None:
         scouts = Scout.objects.all()
 
@@ -117,7 +121,14 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
         values_list('scout', flat=True)
     scouts = scouts.exclude(id__in=rejected_scouts_id)
 
-    house = House.objects.using(settings.HOMES_DB).get(id=task.house_id)
+    if house_visit:
+        # filter the scouts whose scheduled availabilities  lie between visit scheduled visit time
+        sentry_debug_logger.debug('filtering scouts from ' + str(scouts))
+        scouts = scouts.filter(Q(scheduled_availabilities__start_time__lte=house_visit.scheduled_visit_time) &
+                               Q(scheduled_availabilities__end_time__gte=house_visit.scheduled_visit_time) &
+                               Q(scheduled_availabilities__cancelled=False))
+        sentry_debug_logger.debug('after filtering by scheduled availabilities' + str(scouts))
+
     sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
                                              house_longitude=house.address.longitude,
                                              distance_range=15, queryset=scouts)
