@@ -153,9 +153,15 @@ class ScoutNotificationSerializer(serializers.ModelSerializer):
 
 
 class ScoutWalletSerializer(serializers.ModelSerializer):
+    total_earning = serializers.SerializerMethodField()
+
     class Meta:
         model = ScoutWallet
-        fields = ('credit', 'pending_withdrawal', 'debit')
+        fields = ('credit', 'pending_withdrawal', 'debit', 'total_earning')
+
+    @staticmethod
+    def get_total_earning(obj):
+        return obj.debit + obj.pending_withdrawal
 
 
 class ScoutPaymentSerializer(serializers.ModelSerializer):
