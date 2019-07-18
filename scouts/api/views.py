@@ -432,28 +432,32 @@ class HouseVisitScoutDetailView(GenericAPIView):
 @authentication_classes((TenantAuthentication,))
 @permission_classes((IsAuthenticated,))
 def rate_scout(request):
-    data = request.data
-    scout_id = data['scout_id']
-    task_id = data['task_id']
-    rating = int(data['rating'])
+    try:
+        data = request.data
+        scout_id = data['scout_id']
+        task_id = data['task_id']
+        rating = int(data['rating'])
 
-    if rating < 1 or rating > 5:
-        return Response({STATUS: ERROR, 'message': 'Rating must lie between 1 to 5'})
+        if rating < 1 or rating > 5:
+            return Response({STATUS: ERROR, 'message': 'Rating must lie between 1 to 5'})
 
-    scout_task = ScoutTask.objects.get(scout__id=scout_id, id=task_id, rating_given=False, status=COMPLETE)
-    customer = Customer.objects.using(settings.HOMES_DB).get(user=request.user)
-    task_customer = None  # to verify the same customer
+        scout_task = ScoutTask.objects.get(scout__id=scout_id, id=task_id, rating_given=False, status=COMPLETE)
+        customer = Customer.objects.using(settings.HOMES_DB).get(user=request.user)
+        task_customer = None  # to verify the same customer
 
-    if scout_task.category == ScoutTaskCategory.objects.filter(name=HOUSE_VISIT).first():
-        house_visit = HouseVisit.objects.using(settings.HOMES_DB).get(id=scout_task.visit_id)
-        task_customer = house_visit.customer
+        if scout_task.category == ScoutTaskCategory.objects.filter(name=HOUSE_VISIT).first():
+            house_visit = HouseVisit.objects.using(settings.HOMES_DB).get(id=scout_task.visit_id)
+            task_customer = house_visit.customer
 
-    else:
-        return Response({STATUS: ERROR, 'message': 'No task category found'})
+        else:
+            return Response({STATUS: ERROR, 'message': 'No task category found'})
 
-    if task_customer == customer:
-        scout_task.rating = rating
-        scout_task.rating_given = True
-        scout_task.save()
-        success_response = {STATUS: SUCCESS, DATA: {'rating': scout_task.scout.rating}}
-        return Response(success_response)
+        if task_customer == customer:
+            scout_task.rating = rating
+            scout_task.rating_given = True
+            scout_task.save()
+            success_response = {STATUS: SUCCESS, DATA: {'rating': scout_task.scout.rating}}
+            return Response(success_response)
+
+    except Exception as E:
+        sentry_debug_logger.debug('some error occured' + str(E), exc_info=True)
