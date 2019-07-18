@@ -1,6 +1,8 @@
 import random
+from datetime import datetime, timedelta
 
 from django.conf import settings
+from django.contrib.auth.signals import user_logged_out
 from django.core.files.base import ContentFile
 from django.core.validators import RegexValidator
 from django.db import models
@@ -21,14 +23,11 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
     get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
-    REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE, HOUSE_VISIT, \
-    SCOUT_PAYMENT_MESSAGE, get_description_for_completion_of_current_task, NEW_PAYMENT_RECEIVED, \
+    REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE, NEW_PAYMENT_RECEIVED, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_wallet, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
-from datetime import datetime, timedelta
-from django.contrib.auth.signals import user_logged_out
 
 
 class Flag(models.Model):
