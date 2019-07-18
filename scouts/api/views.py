@@ -27,7 +27,7 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
     ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer, ScoutTaskForHouseVisitSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
-    ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory
+    ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory, ScoutTaskReviewTagCategory
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
     HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task
 from utility.logging_utils import sentry_debug_logger
@@ -437,6 +437,7 @@ def rate_scout(request):
         scout_id = data['scout_id']
         task_id = data['task_id']
         rating = int(data['rating'])
+        review_tag_ids = data.get('review_tags', [])
 
         if rating < 1 or rating > 5:
             return Response({STATUS: ERROR, 'message': 'Rating must lie between 1 to 5'})
@@ -454,6 +455,14 @@ def rate_scout(request):
 
         if task_customer == customer:
             scout_task.rating = rating
+
+            for review_tag_id in review_tag_ids:
+                review_tag = ScoutTaskReviewTagCategory.objects.get(id=review_tag_id)
+                if review_tag not in scout_task.review_tags.all():
+                    scout_task.review_tags.add(review_tag)
+                else:
+                    scout_task.review_tags.add(review_tag)
+
             scout_task.rating_given = True
             scout_task.save()
             success_response = {STATUS: SUCCESS, DATA: {'rating': scout_task.scout.rating}}
