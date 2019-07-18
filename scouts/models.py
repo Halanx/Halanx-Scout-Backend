@@ -6,6 +6,7 @@ from django.contrib.auth.signals import user_logged_out
 from django.core.files.base import ContentFile
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import Sum
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -397,6 +398,7 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
     old_scout = old_task.scout
     new_scout = instance.scout
 
+    # Manage Conversation
     conversation = instance.conversation
 
     if conversation:
@@ -426,6 +428,13 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
             type=WITHDRAWAL, status=PENDING)
 
         # Note: Both the above payments are to be verified by company by changing the status to paid
+
+    # Manage rating given to Scout
+    if old_task.rating_given == False and instance.rating_given == True:
+        scout = instance.scout
+        previous_ratings = ScoutTask.objects.filter(scout=scout)
+        scout.rating = (previous_ratings.aggregate(Sum('rating')) + instance.rating) / (len(previous_ratings) + 1)
+        scout.save()
 
 
 # noinspection PyUnusedLocal
