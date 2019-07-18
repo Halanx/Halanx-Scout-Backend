@@ -129,6 +129,10 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
                                Q(scheduled_availabilities__cancelled=False))
         sentry_debug_logger.debug('after filtering by scheduled availabilities' + str(scouts))
 
+    sentry_debug_logger.debug("latitude is " + str(house.address.latitude))
+    sentry_debug_logger.debug("longitude is " + str(house.address.longitude))
+    sentry_debug_logger.debug("queryset is " + str(scouts))
+
     sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
                                              house_longitude=house.address.longitude,
                                              distance_range=15, queryset=scouts)
