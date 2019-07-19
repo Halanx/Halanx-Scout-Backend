@@ -31,12 +31,13 @@ def scout_assignment_request_set_rejected(instance_id):
         from scouts.models import ScoutTaskAssignmentRequest
         from scouts.utils import REQUEST_AWAITED, REQUEST_REJECTED
 
-        scout_task_assign_request = ScoutTaskAssignmentRequest.objects.get(id=instance_id)
+        scout_task_assign_request = ScoutTaskAssignmentRequest.objects.filter(id=instance_id).first()
         # Auto Reject a task after 2 minutes
-        if scout_task_assign_request.status == REQUEST_AWAITED:
-            scout_task_assign_request.status = REQUEST_REJECTED
-            scout_task_assign_request.save()
-            sentry_debug_logger.debug("rejected after two minnutes" + str(instance_id), exc_info=True)
+        if scout_task_assign_request:
+            if scout_task_assign_request.status == REQUEST_AWAITED:
+                scout_task_assign_request.status = REQUEST_REJECTED
+                scout_task_assign_request.save()
+                sentry_debug_logger.debug("rejected after two minnutes" + str(instance_id), exc_info=True)
 
     except Exception as E:
         sentry_debug_logger.error("execption occured is " + str(E), exc_info=True)
