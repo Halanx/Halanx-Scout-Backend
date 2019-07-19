@@ -29,7 +29,7 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
     ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory, ScoutTaskReviewTagCategory
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
-    HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task, HOUSE_VISIT_CANCELLED
+    HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task, HOUSE_VISIT_CANCELLED, CANCELLED
 from utility.logging_utils import sentry_debug_logger
 from utility.render_response_utils import SUCCESS, STATUS, DATA, ERROR
 from utility.sms_utils import send_sms
@@ -412,7 +412,7 @@ class ScoutConsumerLinkView(GenericAPIView):
                                                   visit_id=data['visit_id']).first()
 
             if scout_task:
-                scout_task.cancelled = True
+                scout_task.status = CANCELLED
                 # TODO Either set scout and set status cancelled or remove scout
                 scout_task.scout = None
                 scout_task.save()
