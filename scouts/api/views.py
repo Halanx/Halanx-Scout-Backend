@@ -27,7 +27,8 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
     ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer, ScoutTaskForHouseVisitSerializer
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
-    ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory, ScoutTaskReviewTagCategory
+    ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory, ScoutTaskReviewTagCategory, \
+    ScoutNotificationCategory
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
     HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task, HOUSE_VISIT_CANCELLED, CANCELLED
 from utility.logging_utils import sentry_debug_logger
@@ -410,12 +411,22 @@ class ScoutConsumerLinkView(GenericAPIView):
             scout_task = ScoutTask.objects.filter(category=ScoutTaskCategory.objects.get(name=HOUSE_VISIT),
                                                   house_id=data['house_id'],
                                                   visit_id=data['visit_id']).first()
+            scout = scout_task.scout
 
             if scout_task:
                 scout_task.status = CANCELLED
                 # TODO Either set scout and set status cancelled or remove scout
                 scout_task.scout = None
                 scout_task.save()
+
+                house_visit_cancel_notification_category, _ = ScoutNotificationCategory.objects.\
+                    get_or_create(name=HOUSE_VISIT_CANCELLED)
+
+                if scout:
+                    ScoutNotification.objects.create(category=house_visit_cancel_notification_category, scout=scout,
+                                                     payload=ScoutTaskDetailSerializer(scout_task).data,
+                                                     display=True)
+
                 return JsonResponse({STATUS: SUCCESS})
 
             else:
