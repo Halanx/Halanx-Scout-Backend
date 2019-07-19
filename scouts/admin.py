@@ -63,7 +63,7 @@ class ScoutPaymentAdmin(admin.ModelAdmin):
 
 @admin.register(ScoutWallet)
 class ScoutWalletAdmin(admin.ModelAdmin):
-    list_display = ('credit', 'debit', 'balance', 'pending_deposit', 'pending_withdrawal')
+    list_display = ('scout', 'credit', 'debit', 'balance', 'pending_deposit', 'pending_withdrawal')
 
 
 @admin.register(ScoutNotificationCategory)
