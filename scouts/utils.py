@@ -41,10 +41,12 @@ default_profile_pic_thumbnail_url = "https://{}/static/img/nopic_small.jpg".form
 UNASSIGNED = 'unassigned'
 ASSIGNED = 'assigned'
 COMPLETE = 'complete'
+CANCELLED = 'cancelled'
 
 ScoutTaskStatusCategories = ((UNASSIGNED, 'Unassigned'),
                              (ASSIGNED, 'Assigned'),
-                             (COMPLETE, 'Complete'))
+                             (COMPLETE, 'Complete'),
+                             (CANCELLED, 'Cancelled'))
 
 REQUEST_ACCEPTED = 'accepted'
 REQUEST_REJECTED = 'rejected'
@@ -62,6 +64,7 @@ NEW_PAYMENT_RECEIVED = 'NewPaymentReceived'
 
 TASK_TYPE = 'task_type'
 HOUSE_VISIT = 'House Visit'
+HOUSE_VISIT_CANCELLED = 'House Visit Cancelled'
 
 
 def get_nearby_scouts(latitude, longitude, distance_range=5, queryset=None):

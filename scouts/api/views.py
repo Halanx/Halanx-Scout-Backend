@@ -29,7 +29,7 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
     ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory, ScoutTaskReviewTagCategory
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
-    HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task
+    HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task, HOUSE_VISIT_CANCELLED
 from utility.logging_utils import sentry_debug_logger
 from utility.render_response_utils import SUCCESS, STATUS, DATA, ERROR
 from utility.sms_utils import send_sms
@@ -366,7 +366,7 @@ class TenantRetrieveView(RetrieveAPIView):
         return get_object_or_404(Tenant.objects.using(settings.HOMES_DB), customer__user=self.request.user)
 
 
-class ScoutTaskCreateView(GenericAPIView):
+class ScoutConsumerLinkView(GenericAPIView):
     authentication_classes = [BasicAuthentication, ]
     permission_classes = [IsAdminUser, ]
     queryset = ScoutTaskAssignmentRequest.objects.all()
@@ -404,6 +404,22 @@ class ScoutTaskCreateView(GenericAPIView):
             except Exception as E:
                 sentry_debug_logger.error('Error while creating new scout with error' + str(E), exc_info=True)
                 return JsonResponse({'detail': 'No new scout found'})
+
+        elif request.data[TASK_TYPE] == HOUSE_VISIT_CANCELLED:
+            data = request.data['data']
+            scout_task = ScoutTask.objects.filter(category=ScoutTaskCategory.objects.get(name=HOUSE_VISIT),
+                                                  house_id=data['house_id'],
+                                                  visit_id=data['visit_id']).first()
+
+            if scout_task:
+                scout_task.cancelled = True
+                # TODO Either set scout and set status cancelled or remove scout
+                scout_task.scout = None
+                scout_task.save()
+                return JsonResponse({STATUS: SUCCESS})
+
+            else:
+                return JsonResponse({STATUS: ERROR, 'message': "No such task exists"})
 
 
 class HouseVisitScoutDetailView(GenericAPIView):

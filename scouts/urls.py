@@ -30,7 +30,9 @@ urlpatterns = (
     # Scout Details for a house visit
     url('visits/details/', views.HouseVisitScoutDetailView.as_view()),
 
-    url('^task/create/', views.ScoutTaskCreateView.as_view()),
     url('^task/rate/', views.rate_scout),
+
+    # Url to make connection between halanx-scout and consumer app
+    url('^task/create/', views.ScoutConsumerLinkView.as_view()),
 
 )
