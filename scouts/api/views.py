@@ -324,12 +324,13 @@ class ScoutTaskRetrieveUpdateDestroyAPIView(AuthenticatedRequestMixin, RetrieveU
     def perform_destroy(self, instance):
         task = self.get_object()
         assignment_request = task.assignment_requests.filter(scout=task.scout).last()
-        if assignment_request:
-            assignment_request.status = REQUEST_REJECTED
-            assignment_request.save()
         task.status = UNASSIGNED
         task.scout = None
         task.save()
+
+        if assignment_request:
+            assignment_request.status = REQUEST_REJECTED
+            assignment_request.save()
 
 
 class ScoutTaskAssignmentRequestUpdateAPIView(AuthenticatedRequestMixin, UpdateAPIView):

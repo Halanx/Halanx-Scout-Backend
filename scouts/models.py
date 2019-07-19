@@ -432,8 +432,10 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
     # Manage rating given to Scout
     if not old_task.rating_given and instance.rating_given and instance.status == COMPLETE:
         scout = instance.scout
-        other_ratings = ScoutTask.objects.filter(scout=scout, status=COMPLETE, rating_given=True).exclude(id=instance.id)
-        scout.rating = ((other_ratings.aggregate(Sum('rating')).get('rating__sum') or 0) + instance.rating) / (len(other_ratings) + 1)
+        other_ratings = ScoutTask.objects.filter(scout=scout, status=COMPLETE, rating_given=True).exclude(
+            id=instance.id)
+        scout.rating = ((other_ratings.aggregate(Sum('rating')).get('rating__sum') or 0) + instance.rating) / (
+                len(other_ratings) + 1)
         scout.save()
 
 
@@ -477,9 +479,13 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
     if not old_request:
         return
 
-    if old_request.status == REQUEST_AWAITED and instance.status in [REQUEST_ACCEPTED, REQUEST_REJECTED]:
+    if (old_request.status == REQUEST_AWAITED and instance.status in [REQUEST_ACCEPTED, REQUEST_REJECTED]) or \
+            (old_request.status == REQUEST_ACCEPTED and instance.status == REQUEST_REJECTED):
+
         instance.responded_at = timezone.now()
+
         task = instance.task
+
         if instance.status == REQUEST_ACCEPTED:
             task.scout = instance.scout
             task.status = ASSIGNED
