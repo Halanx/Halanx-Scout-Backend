@@ -70,7 +70,7 @@ class ConversationListSerializer(serializers.ModelSerializer):
             other_participant = obj.other_participant(self.context['requesting_participant'])
             return ParticipantSerializer(other_participant).data
         except IndexError:
-            raise ValidationError({'detail': "No other_participant found"})
+            return None
 
     def get_last_message(self, obj):
         last_message = obj.last_message
