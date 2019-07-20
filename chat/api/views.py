@@ -14,7 +14,7 @@ from chat.models import Conversation, Message, Participant, SocketClient
 from chat.paginators import ChatPagination
 from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, SOCKET_STATUS_CONNECTED, SOCKET_STATUS_DISCONNECTED, \
     NODE_SERVER_CHAT_ENDPOINT, SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX, HALANX_SCOUT_CHAT_API_URL
-from scouts.models import Scout
+from scouts.models import Scout, ScoutTask
 from utility.logging_utils import sentry_debug_logger
 from utility.rest_auth_utils import ChatParticipantAuthentication
 from rest_framework.decorators import api_view, authentication_classes
@@ -52,8 +52,16 @@ class ConversationListView(ListAPIView):
         # will be used to pass in serializer context
         # noinspection PyAttributeOutsideInit
         self.requesting_participant = get_participant_from_request(self.request)
+        queryset = Conversation.objects.filter(participants=self.requesting_participant)
 
-        return sorted(Conversation.objects.filter(participants=self.requesting_participant),
+        if self.requesting_participant.type == TYPE_CUSTOMER:
+            if 'visit_id' in self.request.GET and 'scout_id' in self.request.GET:
+                task = ScoutTask.objects.filter(visit_id=self.request.GET['visit_id'],
+                                                scout_id=self.request.GET['scout_id']).first()
+                if task and task.conversation:
+                    queryset = queryset.filter(participants=task.scout.participant)
+
+        return sorted(queryset,
                       key=lambda t: t.last_message_timestamp,
                       reverse=True)
 
