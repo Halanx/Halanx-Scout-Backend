@@ -69,7 +69,9 @@ class ConversationListSerializer(serializers.ModelSerializer):
         try:
             other_participant = obj.other_participant(self.context['requesting_participant'])
             return ParticipantSerializer(other_participant).data
-        except IndexError:
+        except Exception as E:
+            from utility.logging_utils import sentry_debug_logger
+            sentry_debug_logger.debug("error is " + str(E), exc_info=True)
             return None
 
     def get_last_message(self, obj):

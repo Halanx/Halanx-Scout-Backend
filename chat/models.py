@@ -55,7 +55,7 @@ class Conversation(models.Model):
         :param obj: requesting participant
         :return: other participant
         """
-        return self.participants.exclude(id=obj.id)[0]
+        return self.participants.exclude(id=obj.id).first()
 
 
 class Message(models.Model):
