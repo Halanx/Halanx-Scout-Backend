@@ -17,7 +17,11 @@ class Participant(models.Model):
     @property
     def name(self):
         if self.type == TYPE_SCOUT:
-            return self.scout.name
+            try:
+                return self.scout.name
+            except AttributeError:
+                return str(None)
+
         elif self.type == TYPE_CUSTOMER:
             return Customer.objects.using(settings.HOMES_DB).get(id=self.customer_id).name
 
@@ -69,4 +73,3 @@ class Message(models.Model):
 class SocketClient(models.Model):
     socket_id = models.CharField(max_length=100)
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name='socket_clients')
-
