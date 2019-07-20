@@ -23,8 +23,10 @@ class Participant(models.Model):
                 return str(None)
 
         elif self.type == TYPE_CUSTOMER:
-            return Customer.objects.using(settings.HOMES_DB).get(id=self.customer_id).name
-
+            try:
+                return Customer.objects.using(settings.HOMES_DB).get(id=self.customer_id).name
+            except Customer.DoesNotExist:
+                return str(None)
 
 class Conversation(models.Model):
     task = models.OneToOneField('scouts.ScoutTask', on_delete=models.SET_NULL, null=True, blank=True,
