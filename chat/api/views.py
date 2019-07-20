@@ -55,9 +55,8 @@ class ConversationListView(ListAPIView):
         queryset = Conversation.objects.filter(participants=self.requesting_participant)
 
         if self.requesting_participant.type == TYPE_CUSTOMER:
-            if 'visit_id' in self.request.GET and 'scout_id' in self.request.GET:
-                task = ScoutTask.objects.filter(visit_id=self.request.GET['visit_id'],
-                                                scout_id=self.request.GET['scout_id']).first()
+            if 'task_id' in self.request.GET:
+                task = ScoutTask.objects.filter(task_id=self.request.GET['task_id']).first()
                 if task and task.conversation:
                     queryset = queryset.filter(participants=task.scout.chat_participant)
 
