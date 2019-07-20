@@ -59,7 +59,7 @@ class ConversationListView(ListAPIView):
                 task = ScoutTask.objects.filter(visit_id=self.request.GET['visit_id'],
                                                 scout_id=self.request.GET['scout_id']).first()
                 if task and task.conversation:
-                    queryset = queryset.filter(participants=task.scout.participant)
+                    queryset = queryset.filter(participants=task.scout.chat_participant)
 
         return sorted(queryset,
                       key=lambda t: t.last_message_timestamp,
