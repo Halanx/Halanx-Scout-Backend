@@ -189,7 +189,7 @@ class ScoutRetrieveUpdateView(AuthenticatedRequestMixin, RetrieveUpdateAPIView):
             scout = self.get_object()
             if not scout.document_submission_complete:
                 raise ValidationError({STATUS: ERROR, 'message': "Documents not Submitted"})
-            elif scout.documents.filter(deleted=False, verified=False).count():
+            elif scout.documents.filter(is_deleted=False, verified=False).count():
                 raise ValidationError({STATUS: ERROR, 'message': "Documents not verified"})
 
         super(ScoutRetrieveUpdateView, self).perform_update(serializer)
