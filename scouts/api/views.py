@@ -236,7 +236,7 @@ class ScheduledAvailabilityListCreateView(AuthenticatedRequestMixin, ListCreateA
         scout = get_object_or_404(Scout, user=request.user)
         start_time = datetime.strptime(request.data.get('start_time'), DATETIME_SERIALIZER_FORMAT)
         end_time = datetime.strptime(request.data.get('end_time'), DATETIME_SERIALIZER_FORMAT)
-        if scout.scheduled_availabilities.filter(start_time__lte=start_time, end_time__gte=end_time).count():
+        if scout.scheduled_availabilities.filter(cancelled=False, start_time__lte=start_time, end_time__gte=end_time).count():
             return Response({'error': 'A scheduled availability already exists in given time range'},
                             status=status.HTTP_400_BAD_REQUEST)
 

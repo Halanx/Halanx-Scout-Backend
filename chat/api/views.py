@@ -56,6 +56,7 @@ class ConversationListView(ListAPIView):
 
         if self.requesting_participant.type == TYPE_CUSTOMER:
             if 'task_id' in self.request.GET:
+                # TODO verify that task belongs to the customer only
                 task = ScoutTask.objects.filter(id=self.request.GET['task_id']).first()
                 if task and task.conversation:
                     queryset = queryset.filter(participants=task.scout.chat_participant)
