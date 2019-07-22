@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
 from Homes.Bookings.models import Booking
 from Homes.Houses.models import House, HouseVisit
@@ -120,12 +121,19 @@ class ScheduledAvailabilitySerializer(serializers.ModelSerializer):
         """
         Check the validity of start and end time
         """
+        scout = get_object_or_404(Scout, user=self.context['request'].user)
+
         if data.get('start_time') and data['start_time'] < timezone.now():
             raise serializers.ValidationError("start time should be greater than current time")
         elif data.get('end_time') and data['end_time'] < timezone.now():
             raise serializers.ValidationError("end time should be greater than current time")
         elif data.get('start_time') and data.get('end_time') and data['start_time'] > data['end_time']:
             raise serializers.ValidationError("end time must occur after start time")
+        elif scout.scheduled_availabilities.filter(cancelled=False,
+                                                   start_time__lte=data['start_time'],
+                                                   end_time__gte=data['end_time']).count():
+            raise serializers.ValidationError("A scheduled availability already exists in given time range")
+
         return data
 
 
@@ -246,5 +254,6 @@ class ScoutTaskForHouseVisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ScoutTask
-        fields = ('id', 'scout', 'category', 'status', 'house_id', 'visit_id', 'booking_id', 'scheduled_at', 'assigned_at',
-                  'completed_at')
+        fields = (
+        'id', 'scout', 'category', 'status', 'house_id', 'visit_id', 'booking_id', 'scheduled_at', 'assigned_at',
+        'completed_at')

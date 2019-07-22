@@ -259,16 +259,6 @@ class ScheduledAvailabilityRetrieveUpdateDestroyView(AuthenticatedRequestMixin, 
         instance.cancelled = True
         instance.save()
 
-    def perform_update(self, serializer):
-        scout = get_object_or_404(Scout, user=self.request.user)
-        if scout.scheduled_availabilities.filter(cancelled=False,
-                                                 start_time__lte=serializer.validated_data['start_time'],
-                                                 end_time__gte=serializer.validated_data['end_time']).count():
-
-            return Response({'error': 'A scheduled availability already exists in given time range'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-
 
 class ScoutNotificationListView(AuthenticatedRequestMixin, ListAPIView):
     serializer_class = ScoutNotificationSerializer
