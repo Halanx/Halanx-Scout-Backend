@@ -124,15 +124,15 @@ class ScheduledAvailabilitySerializer(serializers.ModelSerializer):
         scout = get_object_or_404(Scout, user=self.context['request'].user)
 
         if data.get('start_time') and data['start_time'] < timezone.now():
-            raise serializers.ValidationError("start time should be greater than current time")
+            raise serializers.ValidationError({'error': "start time should be greater than current time"})
         elif data.get('end_time') and data['end_time'] < timezone.now():
-            raise serializers.ValidationError("end time should be greater than current time")
+            raise serializers.ValidationError({'error': "end time should be greater than current time"})
         elif data.get('start_time') and data.get('end_time') and data['start_time'] > data['end_time']:
-            raise serializers.ValidationError("end time must occur after start time")
+            raise serializers.ValidationError({'error': "end time must occur after start time"})
         elif scout.scheduled_availabilities.filter(cancelled=False,
                                                    start_time__lte=data['start_time'],
                                                    end_time__gte=data['end_time']).count():
-            raise serializers.ValidationError("A scheduled availability already exists in given time range")
+            raise serializers.ValidationError({'error': "A scheduled availability already exists in given time range"})
 
         return data
 
