@@ -422,12 +422,11 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
             type=DEPOSIT, status=PENDING)
 
         # 2 Create a payment that shows amount to be withdrawn from the wallet by the user
-        obj = ScoutPayment.objects.create(
-            wallet=instance.scout.wallet, amount=instance.category.earning,
-            description=get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account(instance),
-            type=WITHDRAWAL, status=PENDING)
+        ScoutPayment.objects.create(wallet=instance.scout.wallet, amount=instance.category.earning,
+                                    description=get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account(
+                                        instance),
+                                    type=WITHDRAWAL, status=PENDING)
 
-        instance.payment = obj
         # Note: Both the above payments are to be verified by company by changing the status to paid
 
     # Manage rating given to Scout
