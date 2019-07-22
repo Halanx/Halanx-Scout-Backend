@@ -181,6 +181,19 @@ class ScoutRetrieveUpdateView(AuthenticatedRequestMixin, RetrieveUpdateAPIView):
     def get_object(self):
         return get_object_or_404(Scout, user=self.request.user)
 
+    def perform_update(self, serializer):
+        # if go_online/offline is called, check whether documents are verified first and only field to be
+        #  updated is 'active'
+
+        if 'active' in self.request.data and self.request.data['active']:
+            scout = self.get_object()
+            if not scout.document_submission_complete:
+                raise ValidationError({STATUS: ERROR, 'message': "Documents not Submitted"})
+            elif scout.documents.filter(deleted=False, verified=False).count():
+                raise ValidationError({STATUS: ERROR, 'message': "Documents not verified"})
+
+        super(ScoutRetrieveUpdateView, self).perform_update(serializer)
+
 
 class ScoutPictureCreateView(AuthenticatedRequestMixin, CreateAPIView):
     serializer_class = ScoutPictureSerializer
@@ -236,7 +249,8 @@ class ScheduledAvailabilityListCreateView(AuthenticatedRequestMixin, ListCreateA
         scout = get_object_or_404(Scout, user=request.user)
         start_time = datetime.strptime(request.data.get('start_time'), DATETIME_SERIALIZER_FORMAT)
         end_time = datetime.strptime(request.data.get('end_time'), DATETIME_SERIALIZER_FORMAT)
-        if scout.scheduled_availabilities.filter(cancelled=False, start_time__lte=start_time, end_time__gte=end_time).count():
+        if scout.scheduled_availabilities.filter(cancelled=False, start_time__lte=start_time,
+                                                 end_time__gte=end_time).count():
             return Response({'error': 'A scheduled availability already exists in given time range'},
                             status=status.HTTP_400_BAD_REQUEST)
 
@@ -419,7 +433,7 @@ class ScoutConsumerLinkView(GenericAPIView):
                 scout_task.scout = None
                 scout_task.save()
 
-                house_visit_cancel_notification_category, _ = ScoutNotificationCategory.objects.\
+                house_visit_cancel_notification_category, _ = ScoutNotificationCategory.objects. \
                     get_or_create(name=HOUSE_VISIT_CANCELLED)
 
                 if scout:
