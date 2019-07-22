@@ -229,7 +229,7 @@ class ScheduledAvailabilityListCreateView(AuthenticatedRequestMixin, ListCreateA
 
     def get_queryset(self):
         scout = get_object_or_404(Scout, user=self.request.user)
-        return scout.scheduled_availabilities.order_by('start_time').filter(start_time__gte=timezone.now(),
+        return scout.scheduled_availabilities.order_by('start_time').filter(end_time__gte=timezone.now(),
                                                                             cancelled=False)
 
     def create(self, request, *args, **kwargs):
