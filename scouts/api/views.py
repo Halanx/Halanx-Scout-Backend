@@ -253,7 +253,7 @@ class ScheduledAvailabilityRetrieveUpdateDestroyView(AuthenticatedRequestMixin, 
 
     def get_object(self):
         return get_object_or_404(ScheduledAvailability, pk=self.kwargs.get('pk'), scout__user=self.request.user,
-                                 cancelled=False, start_time__gte=timezone.now())
+                                 cancelled=False, end_time__gte=timezone.now())
 
     def perform_destroy(self, instance):
         instance.cancelled = True
