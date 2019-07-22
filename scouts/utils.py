@@ -67,7 +67,7 @@ HOUSE_VISIT = 'House Visit'
 HOUSE_VISIT_CANCELLED = 'House Visit Cancelled'
 
 
-def get_nearby_scouts(latitude, longitude, distance_range=5, queryset=None):
+def get_nearby_scouts(latitude, longitude, distance_range=50, queryset=None):
     from scouts.models import Scout
     if queryset is None:
         queryset = Scout.objects.all()
@@ -78,7 +78,7 @@ def get_nearby_scouts(latitude, longitude, distance_range=5, queryset=None):
     return queryset
 
 
-def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=10, queryset=None):
+def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=50, queryset=None):
     if queryset is None:
         from scouts.models import Scout
         queryset = Scout.objects.all()
@@ -139,7 +139,7 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
 
     sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
                                              house_longitude=house.address.longitude,
-                                             distance_range=15, queryset=scouts)
+                                             distance_range=50, queryset=scouts)
 
     try:
         selected_scout = sorted_scouts[0][0]
