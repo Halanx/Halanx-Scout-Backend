@@ -133,7 +133,7 @@ class ScheduledAvailabilitySerializer(serializers.ModelSerializer):
         elif scout.scheduled_availabilities.filter(cancelled=False,
                                                    start_time__lte=data['start_time'],
                                                    end_time__gte=data['end_time']).count():
-            raise ValidationError("A scheduled availability already exists in given time range")
+            raise serializers.ValidationError("A scheduled availability already exists in given time range")
 
         return data
 
