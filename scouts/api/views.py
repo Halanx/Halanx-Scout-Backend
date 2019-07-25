@@ -480,6 +480,7 @@ def rate_scout(request):
         task_id = data['task_id']
         rating = int(data['rating'])
         review_tag_ids = data.get('review_tags', [])
+        remarks = data.get('remarks', '')
 
         if rating < 1 or rating > 5:
             return Response({STATUS: ERROR, 'message': 'Rating must lie between 1 to 5'})
@@ -500,6 +501,7 @@ def rate_scout(request):
             # Manage Rating and Reviewing
 
             scout_task.rating = rating
+            scout_task.remarks = remarks
 
             for review_tag_id in review_tag_ids:
                 review_tag = ScoutTaskReviewTagCategory.objects.get(id=review_tag_id)
