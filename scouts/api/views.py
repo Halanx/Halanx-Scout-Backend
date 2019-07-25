@@ -490,7 +490,7 @@ def rate_scout(request):
         task_customer = None  # to verify the same customer
 
         if scout_task.category == ScoutTaskCategory.objects.filter(name=HOUSE_VISIT).first():
-            house_visit = HouseVisit.objects.using(settings.HOMES_DB).get(id=scout_task.visit_id)
+            house_visit = HouseVisit.objects.using(settings.HOMES_DB).get(id=scout_task.visit_id, visited=True)
             task_customer = house_visit.customer
 
         else:
