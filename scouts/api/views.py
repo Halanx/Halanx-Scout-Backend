@@ -522,6 +522,9 @@ def rate_scout(request):
             success_response = {STATUS: SUCCESS, DATA: {'rating': scout_task.scout.rating}}
             return Response(success_response)
 
+        else:
+            return Response({STATUS: ERROR, 'message': 'You are not allowed to rate this task'}, status=status.HTTP_403_FORBIDDEN)
+
     except Exception as E:
         sentry_debug_logger.debug('some error occured' + str(E), exc_info=True)
         error_response = {STATUS: ERROR, 'message': 'Some error occured'}
