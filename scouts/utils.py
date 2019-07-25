@@ -126,15 +126,10 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
 
     if house_visit:
         # filter the scouts whose scheduled availabilities  lie between visit scheduled visit time
-        sentry_debug_logger.debug('filtering scouts from ' + str(scouts))
         scouts = scouts.filter(Q(scheduled_availabilities__start_time__lte=house_visit.scheduled_visit_time) &
                                Q(scheduled_availabilities__end_time__gte=house_visit.scheduled_visit_time) &
                                Q(scheduled_availabilities__cancelled=False))
 
-        sentry_debug_logger.debug('after filtering by scheduled availabilities' + str(scouts))
-
-    sentry_debug_logger.debug("latitude is " + str(house.address.latitude))
-    sentry_debug_logger.debug("longitude is " + str(house.address.longitude))
     sentry_debug_logger.debug("queryset is " + str(scouts))
 
     sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
@@ -144,7 +139,6 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
     try:
         selected_scout = sorted_scouts[0][0]
     except Exception as E:
-        sentry_debug_logger.debug('error in non demo testing is  ' + str(E), exc_info=True)
         selected_scout = None
 
     sentry_debug_logger.debug("received scout is " + str(selected_scout))

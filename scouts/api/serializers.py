@@ -257,4 +257,4 @@ class ScoutTaskForHouseVisitSerializer(serializers.ModelSerializer):
         model = ScoutTask
         fields = (
             'id', 'scout', 'category', 'status', 'house_id', 'visit_id', 'booking_id', 'scheduled_at', 'assigned_at',
-            'completed_at')
+            'completed_at', 'rating_given', 'rating')
