@@ -138,6 +138,12 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
 
     try:
         selected_scout = sorted_scouts[0][0]
+        if len(sorted_scouts) == 1:
+            # CHANGE ALL REQUEST_REJECTED to REQUEST_AWAITED
+            ScoutTaskAssignmentRequest.objects.filter(task=task, status=REQUEST_REJECTED, auto_rejected=True).update(
+                status=REQUEST_AWAITED,
+                auto_rejected=False)
+
     except Exception as E:
         selected_scout = None
 

@@ -114,7 +114,7 @@ class ScoutTaskAdmin(admin.ModelAdmin):
 
 @admin.register(ScoutTaskAssignmentRequest)
 class ScoutTaskAssignmentRequestAdmin(admin.ModelAdmin):
-    list_display = ('id', 'scout', 'task', 'created_at', 'responded_at', 'status')
+    list_display = ('id', 'scout', 'task', 'created_at', 'responded_at', 'status', 'auto_rejected')
     raw_id_fields = ('scout', 'task',)
 
 
