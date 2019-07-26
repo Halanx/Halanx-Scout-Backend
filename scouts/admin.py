@@ -75,7 +75,7 @@ class ScoutNotificationCategoryAdmin(admin.ModelAdmin):
 @admin.register(ScoutNotification)
 class ScoutNotificationAdmin(admin.ModelAdmin):
     list_display = ('id', 'scout', 'category', 'content', 'get_notification_image_html',)
-    search_fields = ('scout__first_name', 'scout__phone_no',)
+    search_fields = ('scout__name', 'scout__phone_no',)
     list_filter = ('category',)
 
 
