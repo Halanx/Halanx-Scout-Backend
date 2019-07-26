@@ -95,8 +95,9 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
 
     data['message_data'] = data_copy
     request_data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
-    z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=json.loads(json.dumps(request_data)))
-    sentry_debug_logger.debug('request_data is  ' + str(z) + str(request_data), exc_info=True)
+    headers = {'Content-type': 'application/json'}
+    z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=json.dumps(request_data), headers=headers)
+    sentry_debug_logger.debug('request_data is  ' + str(request_data), exc_info=True)
     sentry_debug_logger.debug('response code is ' + str(z) + str(z.content), exc_info=True)
 
 
