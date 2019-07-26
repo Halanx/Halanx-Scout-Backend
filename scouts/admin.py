@@ -122,7 +122,7 @@ class ScoutTaskAssignmentRequestAdmin(admin.ModelAdmin):
 class ScheduledAvailiabilityModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'scout', 'start_time', 'end_time', 'cancelled')
 
+
 @admin.register(Flag)
 class FlagModelAdmin(admin.ModelAdmin):
     list_display = ['id', 'enabled', 'value']
-
