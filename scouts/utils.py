@@ -109,7 +109,7 @@ def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=50,
     return result
 
 
-def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
+def get_appropriate_scout_for_the_house_visit_task(task, scouts=None, old_assignment_request=None, new_assignment_request=None):
     from scouts.models import ScoutTaskAssignmentRequest
     from scouts.models import Scout
 
