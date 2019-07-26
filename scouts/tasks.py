@@ -36,8 +36,9 @@ def scout_assignment_request_set_rejected(instance_id):
         if scout_task_assign_request:
             if scout_task_assign_request.status == REQUEST_AWAITED:
                 scout_task_assign_request.status = REQUEST_REJECTED
+                scout_task_assign_request.auto_rejected = True
                 scout_task_assign_request.save()
-                sentry_debug_logger.debug("rejected after two minnutes" + str(instance_id), exc_info=True)
+                sentry_debug_logger.debug("rejected after two minutes" + str(instance_id), exc_info=True)
 
     except Exception as E:
         sentry_debug_logger.error("execption occured is " + str(E), exc_info=True)

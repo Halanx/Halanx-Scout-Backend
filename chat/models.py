@@ -28,6 +28,7 @@ class Participant(models.Model):
             except Customer.DoesNotExist:
                 return str(None)
 
+
 class Conversation(models.Model):
     task = models.OneToOneField('scouts.ScoutTask', on_delete=models.SET_NULL, null=True, blank=True,
                                 related_name='conversation')

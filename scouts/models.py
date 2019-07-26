@@ -325,6 +325,7 @@ class ScoutTaskAssignmentRequest(models.Model):
     scout = models.ForeignKey('Scout', on_delete=models.SET_NULL, null=True, related_name='task_assignment_requests')
     status = models.CharField(max_length=50, choices=ScoutTaskAssignmentRequestStatusCategories,
                               default=REQUEST_AWAITED)
+    auto_rejected = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     responded_at = models.DateTimeField(blank=True, null=True)
