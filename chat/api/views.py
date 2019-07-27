@@ -80,8 +80,12 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
     For more reference see Halanx-node/index.js AND
     Halanx-db/Chat/api/views.py - scout_chat_view
     SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX used for conversation between scout and customer
+
+    # TODO: The chat may fail when scout chats with customer when scout_id = customer_id because that will lead to
+    # TODO: same key for redis i.e for e.g  SCOUTCHAT:5 = SCOUTCHAT:5
     """
     data_copy = deepcopy(data)
+
     if receiver_participant.type == TYPE_SCOUT:
         scout = receiver_participant.scout
         scout_id = scout.id
