@@ -12,6 +12,7 @@ from Homes.Houses.models import House, HouseVisit
 from Homes.Houses.serializers import HouseSerializer, SpaceSerializer
 from UserBase.serializers import CustomerSerializer
 from chat.api.serializers import ScoutDetailSerializer
+from chat.models import Message
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
     ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment, ScoutTask, \

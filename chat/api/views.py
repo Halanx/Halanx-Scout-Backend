@@ -15,8 +15,12 @@ from chat.models import Conversation, Message, Participant, SocketClient
 from chat.paginators import ChatPagination
 from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, SOCKET_STATUS_CONNECTED, SOCKET_STATUS_DISCONNECTED, \
     NODE_SERVER_CHAT_ENDPOINT, SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX, HALANX_SCOUT_CHAT_API_URL
-from scouts.models import Scout, ScoutTask
+from scouts.api.serializers import NewMessageNotificationSerializer
+from scouts.models import Scout, ScoutTask, ScoutNotification, ScoutNotificationCategory
+from scouts.utils import NEW_MESSAGE_RECEIVED
+from utility.environments import PRODUCTION
 from utility.logging_utils import sentry_debug_logger
+from utility.redis_utils import ConsumerAppRedis
 from utility.rest_auth_utils import ChatParticipantAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from django.http import JsonResponse
@@ -97,16 +101,35 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
         data['sender'] = msg.sender.scout.id
         data['receiver'] = SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX + str(customer_id)
 
-    data['message_data'] = data_copy
-    # In case of socket the role ill always be receiver
-    data['message_data']['role'] = 'receiver'
-    request_data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
-    headers = {'Content-type': 'application/json'}
-    z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=json.dumps(request_data), headers=headers)
-    sentry_debug_logger.debug('request_data is  ' + str(request_data), exc_info=True)
-    sentry_debug_logger.debug('response code is ' + str(z) + str(z.content), exc_info=True)
+    # Send Message if Online
+    if settings.ENVIRONMENT == PRODUCTION:
+        r = ConsumerAppRedis()
+
+        if r.get(data['receiver']):  # Receiver is Online
+            sentry_debug_logger.debug("user is online")
+            data['message_data'] = data_copy
+            # In case of socket the role ill always be receiver
+            data['message_data']['role'] = 'receiver'
+            request_data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
+            headers = {'Content-type': 'application/json'}
+            z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=json.dumps(request_data), headers=headers)
+            sentry_debug_logger.debug('request_data is  ' + str(request_data), exc_info=True)
+            sentry_debug_logger.debug('response code is ' + str(z) + str(z.content), exc_info=True)
+
+        else:
+            sentry_debug_logger.debug('user is offline')
+            if receiver_participant.type == TYPE_SCOUT:
+                new_message_received_notification_category, _ = ScoutNotificationCategory.objects.get_or_create(
+                    name=NEW_MESSAGE_RECEIVED)
+
+                ScoutNotification.objects.create(category=new_message_received_notification_category, scout=scout,
+                                                 payload=MessageSerializer(msg).data, display=False)
+
+            elif receiver_participant.type == TYPE_CUSTOMER:
+                sentry_debug_logger.debug("send notification to consumer not implemented in scout app")
 
 
+# remove later
 def send_message_to_receiver_participant_via_socket(data, receiver_participant):
     try:
         request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id,

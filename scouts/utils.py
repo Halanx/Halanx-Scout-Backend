@@ -61,6 +61,7 @@ ScoutTaskAssignmentRequestStatusCategories = (
 # predefined scout notification categories
 NEW_TASK_NOTIFICATION = 'NewTask'
 NEW_PAYMENT_RECEIVED = 'NewPaymentReceived'
+NEW_MESSAGE_RECEIVED = 'NewMessageReceived'
 
 TASK_TYPE = 'task_type'
 HOUSE_VISIT = 'House Visit'
