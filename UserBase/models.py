@@ -7,6 +7,7 @@ from UserBase.utils import (default_profile_pic_url,
 
 
 class Customer(models.Model):
+    gcm_id = models.CharField(max_length=500, blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     phone_no = models.CharField(max_length=30, unique=True, validators=[RegexValidator('^[+]*\d{10,}$',
                                                                                        message="Phone Number should "

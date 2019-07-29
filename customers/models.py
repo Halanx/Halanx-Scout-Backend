@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.html import format_html
 
 from common.models import Notification, NotificationCategory
+from .tasks import send_customer_notification
 
 
 class CustomerNotificationCategory(NotificationCategory):
@@ -24,3 +25,11 @@ class CustomerNotification(Notification):
 
     get_notification_image_html.short_description = 'Notification Image'
     get_notification_image_html.allow_tags = True
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            from customers.api.serializers import CustomerNotificationCategorySerializer
+            send_customer_notification.delay(self.scout.id, title=self.category.name, content=self.content,
+                                             category=CustomerNotificationCategorySerializer(self.category).data,
+                                             payload=self.payload)
+        super(CustomerNotification, self).save(*args, **kwargs)

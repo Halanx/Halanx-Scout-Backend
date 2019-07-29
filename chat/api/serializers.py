@@ -7,6 +7,7 @@ from chat.models import Conversation, Message, Participant
 from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, ROLE_SENDER, ROLE_RECEIVER
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout
+from utility.logging_utils import sentry_debug_logger
 from utility.serializers import DateTimeFieldTZ
 
 
@@ -40,16 +41,27 @@ class ParticipantSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     created_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT, read_only=True)
+    task = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ('id', 'created_at', 'is_read', 'read_at', 'content', 'role', 'conversation')
+        fields = ('id', 'created_at', 'is_read', 'read_at', 'content', 'role', 'conversation', 'task')
+
+    @staticmethod
+    def get_task(obj):
+        try:
+            from scouts.api.serializers import ScoutTaskDetailSerializer
+            return ScoutTaskDetailSerializer(obj.conversation.task).data
+        except Exception as E:
+            sentry_debug_logger.error(str(E), exc_info=True)
+            return None
 
     def get_role(self, obj):
         if obj.sender == self.context['requesting_participant']:
             return ROLE_SENDER
         elif obj.sender == obj.conversation.other_participant(self.context['requesting_participant']):
             return ROLE_RECEIVER
+
         elif self.context['requesting_participant'].type == TYPE_SCOUT:
             # multiple scout participants possible. All of them sender if not original sender
             return ROLE_SENDER
