@@ -28,6 +28,9 @@ class ConsumerAppRedis:
                     message = response['message']
                     exception = response['exception']
                     unpickled_exception = pickle.loads(codecs.decode(exception.encode(), "base64"))
+
+                return str(response)
+
             return func
 
         raise NotImplementedError
