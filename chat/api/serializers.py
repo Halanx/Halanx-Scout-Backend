@@ -43,7 +43,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ('id', 'created_at', 'is_read', 'read_at', 'content', 'role')
+        fields = ('id', 'created_at', 'is_read', 'read_at', 'content', 'role', 'conversation')
 
     def get_role(self, obj):
         if obj.sender == self.context['requesting_participant']:

@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'Homes.Bookings',
 
     'scouts',
+    'customers',
     'chat',
 ]
 
