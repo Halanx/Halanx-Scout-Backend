@@ -1,4 +1,5 @@
 import codecs
+import json
 import pickle
 import requests
 from decouple import config
@@ -21,7 +22,7 @@ class ConsumerAppRedis:
 
                 x = requests.post(config('HOMES_REDISAPI_EVENT_URL'),
                                   headers={'Content-type': 'application/json'},
-                                  data={'attr': attr, 'args': args, 'kwargs': kwargs},
+                                  data=json.dumps({'attr': attr, 'args': args, 'kwargs': kwargs}),
                                   auth=(config('HOMES_ADMIN_USERNAME'), config('HOMES_ADMIN_PASSWORD')))
 
                 response = x.json()
