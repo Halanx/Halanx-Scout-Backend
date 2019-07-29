@@ -29,7 +29,7 @@ class CustomerNotification(Notification):
     def save(self, *args, **kwargs):
         if not self.pk:
             from customers.api.serializers import CustomerNotificationCategorySerializer
-            send_customer_notification.delay(self.scout.id, title=self.category.name, content=self.content,
+            send_customer_notification.delay(self.customer_id, title=self.category.name, content=self.content,
                                              category=CustomerNotificationCategorySerializer(self.category).data,
                                              payload=self.payload)
         super(CustomerNotification, self).save(*args, **kwargs)
