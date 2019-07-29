@@ -107,16 +107,17 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
         if r.get(data['receiver']):  # Receiver is Online
             sentry_debug_logger.debug("user is online")
             data['message_data'] = data_copy
-            # In case of socket the role ill always be receiver
+            # In case of socket the role will always be receiver
             data['message_data']['role'] = 'receiver'
-            request_data = {'scout_chat_receiver_id': data['receiver'], 'data': data}
-            headers = {'Content-type': 'application/json'}
-            z = requests.post(HALANX_SCOUT_CHAT_API_URL, data=json.dumps(request_data), headers=headers)
-            sentry_debug_logger.debug('request_data is  ' + str(request_data), exc_info=True)
-            sentry_debug_logger.debug('response code is ' + str(z) + str(z.content), exc_info=True)
+            scout_chat_receiver_id = data['receiver']
+
+            if r.get(scout_chat_receiver_id):
+                msg = json.dumps(data)
+                r.publish('onChat', msg)
 
         else:
             sentry_debug_logger.debug('user is offline')
+
             if receiver_participant.type == TYPE_SCOUT:
                 new_message_received_notification_category, _ = ScoutNotificationCategory.objects.get_or_create(
                     name=NEW_MESSAGE_RECEIVED)
@@ -163,13 +164,7 @@ class MessageListCreateView(ListCreateAPIView):
             msg = serializer.save(conversation=conversation, sender=self.requesting_participant,
                                   receiver=conversation.other_participant(self.requesting_participant))
 
-            # Sending Message to Node JS Socket Server via post request
             message_data = MessageSerializer(msg, context=self.get_serializer_context()).data
-
-            # send_message_to_receiver_participant_via_socket(
-            #     data=message_data,
-            #     receiver_participant=msg.receiver)
-
             send_message_to_receiver_participant_via_consumer_app(msg=msg, data=message_data,
                                                                   receiver_participant=msg.receiver)
 
@@ -188,38 +183,3 @@ class MessageListCreateView(ListCreateAPIView):
         data = super(MessageListCreateView, self).get_serializer_context()
         data['requesting_participant'] = self.requesting_participant
         return data
-
-
-@api_view(('POST',))
-@authentication_classes((ChatParticipantAuthentication,))
-def get_socket_id_from_node_server(request):
-    result = {}
-    try:
-        requesting_participant = get_participant_from_request(request)
-        socket_id = request.data['socket_id']
-        data = request.data['data']
-        # user = request.auth.user
-
-        # Adding Socket to Socket Client
-        if data['socket_status'] == SOCKET_STATUS_CONNECTED:
-            socket_client, created = SocketClient.objects.update_or_create(
-                defaults={'socket_id': socket_id,
-                          'participant': requesting_participant
-                          },
-                participant=requesting_participant)
-
-            result = {'status': 'success', 'socket_id': socket_client.socket_id, 'message': "connected succesfully"}
-
-        # Remove Socket from Socket Table
-        elif data['socket_status'] == SOCKET_STATUS_DISCONNECTED:
-            deleted, _ = SocketClient.objects.filter(socket_id=socket_id, participant=requesting_participant).delete()
-            if deleted:
-                result = {'status': 'success', 'socket_id': socket_id, 'message': 'disconnected succesfully'}
-            else:
-                result = {'status': 'error', 'message': 'No Such Client Exists'}
-
-    except Exception as E:
-        print(E)
-        result = {'status': 'error', 'message': str(E)}
-
-    return JsonResponse(result)
