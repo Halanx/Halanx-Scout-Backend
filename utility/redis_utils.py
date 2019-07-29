@@ -34,4 +34,3 @@ class ConsumerAppRedis:
 
 
 myinstance = ConsumerAppRedis()
-myinstance.get("hmm", a=4)

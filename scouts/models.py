@@ -11,9 +11,10 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from Homes.Bookings.models import Booking
-from Homes.Houses.models import HouseVisit
+from Homes.Houses.models import HouseVisit, House
 from chat.models import Conversation, Participant
 from chat.utils import TYPE_SCOUT, TYPE_CUSTOMER
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
@@ -318,6 +319,68 @@ class ScoutTask(models.Model):
             booking = self.booking
             if booking and booking.tenant:
                 return booking.tenant.customer
+
+    # admin read only fields
+
+    def visit_link(self):
+        try:
+            if self.visit_id:
+                house_visit = HouseVisit.objects.using(settings.HOMES_DB).filter(id=self.visit_id).first()
+                if house_visit:
+                    url = '<a href="%s/Houses/housevisit/%s/">Click to see ' \
+                          'Visit</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.visit_id))
+                else:
+                    url = '<a href="%s/Houses/housevisit/%s/">Visit Not Found' \
+                          '</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.visit_id))
+
+                return mark_safe(url)
+
+            else:
+                return str('No Visit')
+
+        except Exception as E:
+            return str(E)
+    visit_link.short_description = 'Visit Link'
+
+    def house_link(self):
+        try:
+            if self.house_id:
+                house = House.objects.using(settings.HOMES_DB).filter(id=self.house_id).first()
+                if house:
+                    url = '<a href="%s/Houses/house/%s/">Click to see ' \
+                          'House</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.house_id))
+                else:
+                    url = '<a href="%s/Houses/house/%s/">House Not Found' \
+                          '</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.house_id))
+
+                return mark_safe(url)
+
+            else:
+                return str('No House')
+
+        except Exception as E:
+            return str(E)
+    house_link.short_description = 'House Link'
+
+    def booking_link(self):
+        try:
+            if self.booking_id:
+                booking = Booking.objects.using(settings.HOMES_DB).filter(id=self.booking_id).first()
+                if booking:
+                    url = '<a href="%s/Houses/booking/%s/">Click to see ' \
+                          'Booking</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.booking_id))
+                else:
+                    url = '<a href="%s/Houses/booking/%s/">Booking Not Found' \
+                          '</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.booking_id))
+
+                return mark_safe(url)
+
+            else:
+                return str('No Booking')
+
+        except Exception as E:
+            return str(E)
+    booking_link.short_description = 'Booking Link'
 
 
 class ScoutTaskAssignmentRequest(models.Model):

@@ -140,3 +140,5 @@ LOGGING = {
         }
     }
 }
+
+HALANX_HOMES_ADMIN_URL = "https://api.halanx.com/admin/halanxhomes"
