@@ -35,7 +35,7 @@ class ConsumerAppRedis:
                     exception = response['exception']
                     unpickled_exception = pickle.loads(codecs.decode(exception.encode(), "base64"))
 
-                return str(response)
+                return response
 
             return func
 
