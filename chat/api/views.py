@@ -15,7 +15,6 @@ from chat.models import Conversation, Message, Participant, SocketClient
 from chat.paginators import ChatPagination
 from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, SOCKET_STATUS_CONNECTED, SOCKET_STATUS_DISCONNECTED, \
     NODE_SERVER_CHAT_ENDPOINT, SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX, HALANX_SCOUT_CHAT_API_URL
-from scouts.api.serializers import NewMessageNotificationSerializer
 from scouts.models import Scout, ScoutTask, ScoutNotification, ScoutNotificationCategory
 from scouts.utils import NEW_MESSAGE_RECEIVED
 from utility.environments import PRODUCTION
