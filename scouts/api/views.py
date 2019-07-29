@@ -125,7 +125,11 @@ def login_with_otp(request):
     Generate token for user
     """
     phone_no = request.data.get('username')[1:]
-    scout = get_object_or_404(Scout, phone_no=phone_no)
+    try:
+        scout = get_object_or_404(Scout, phone_no=phone_no)
+    except Exception as E:
+        return Response({"error": 'No scout exists with this phone no'}, status=status.HTTP_403_FORBIDDEN)
+
     user = scout.user
     otp = get_object_or_404(OTP, phone_no=phone_no, password=request.data.get('password'))
     if otp.timestamp >= timezone.now() - timedelta(minutes=10):
