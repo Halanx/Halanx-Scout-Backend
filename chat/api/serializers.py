@@ -41,19 +41,28 @@ class ParticipantSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     created_at = DateTimeFieldTZ(format=DATETIME_SERIALIZER_FORMAT, read_only=True)
-    task = serializers.SerializerMethodField()
+    task_id = serializers.SerializerMethodField()
+    customer_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ('id', 'created_at', 'is_read', 'read_at', 'content', 'role', 'conversation', 'task')
+        fields = ('id', 'created_at', 'is_read', 'read_at', 'content', 'role', 'conversation', 'task_id',
+                  'customer_name')
 
     @staticmethod
-    def get_task(obj):
+    def get_task_id(obj):
         try:
             from scouts.api.serializers import ScoutTaskDetailSerializer
-            return ScoutTaskDetailSerializer(obj.conversation.task).data
+            return obj.conversation.task.id
         except Exception as E:
             sentry_debug_logger.error(str(E), exc_info=True)
+            return None
+
+    @staticmethod
+    def get_customer_name(obj):
+        try:
+            return obj.conversation.participants.filter(type=TYPE_CUSTOMER).first().name
+        except:
             return None
 
     def get_role(self, obj):
