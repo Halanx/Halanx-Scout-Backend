@@ -14,7 +14,7 @@ class ParticipantAdmin(admin.ModelAdmin):
 
 @admin.register(Conversation)
 class ConversationModelAdmin(admin.ModelAdmin):
-    list_display = ('task', 'created_at', 'updated_at')
+    list_display = ('id', 'task', 'created_at', 'updated_at')
 
 
 @admin.register(SocketClient)
