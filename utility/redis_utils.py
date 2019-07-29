@@ -29,14 +29,18 @@ class ConsumerAppRedis:
                 if response[STATUS] == SUCCESS:
                     result = response['result']
                     result_type = response['result_type']
+                    if result_type == 'bytes':
+                        result = result.encode()
+                        response['result'] = result
+
                     return response['result']
 
                 elif response[STATUS] == ERROR:
                     message = response['message']
                     exception = response['exception']
+                    print("error occurs with message" + str(message))
                     unpickled_exception = pickle.loads(codecs.decode(exception.encode(), "base64"))
-                    raise Exception('')
-
+                    raise unpickled_exception
 
             return func
 
