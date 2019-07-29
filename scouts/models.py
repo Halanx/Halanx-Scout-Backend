@@ -367,10 +367,10 @@ class ScoutTask(models.Model):
             if self.booking_id:
                 booking = Booking.objects.using(settings.HOMES_DB).filter(id=self.booking_id).first()
                 if booking:
-                    url = '<a href="%s/Houses/booking/%s/">Click to see ' \
+                    url = '<a href="%s/Booking/booking/%s/">Click to see ' \
                           'Booking</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.booking_id))
                 else:
-                    url = '<a href="%s/Houses/booking/%s/">Booking Not Found' \
+                    url = '<a href="%s/Bookings/booking/%s/">Booking Not Found' \
                           '</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.booking_id))
 
                 return mark_safe(url)
