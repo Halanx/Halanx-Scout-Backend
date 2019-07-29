@@ -4,6 +4,7 @@ import requests
 from decouple import config
 from redis import StrictRedis
 
+from utility.logging_utils import sentry_debug_logger
 from utility.render_response_utils import STATUS, SUCCESS, ERROR
 
 
@@ -12,11 +13,15 @@ class ConsumerAppRedis:
 
     def __getattr__(self, attr):
         # if attr in ['get', 'publish']:
-        if attr in [func for func in dir(StrictRedis) if callable(getattr(StrictRedis, func)) and not func.startswith("__")]:
+        if attr in [func for func in dir(StrictRedis) if
+                    callable(getattr(StrictRedis, func)) and not func.startswith("__")]:
             def func(*args, **kwargs):
-                print(attr, "called with ", args, kwargs)
+                sentry_debug_logger.debug(str(attr) + " called with args=" + str(args) + " and kwargs=" + str(kwargs),
+                                          exc_info=True)
+
                 x = requests.post(config('HOMES_REDISAPI_EVENT_URL'),
                                   headers={'Content-type': 'application/json'},
+                                  data={'attr': attr, 'args': args, 'kwargs': kwargs},
                                   auth=(config('HOMES_ADMIN_USERNAME'), config('HOMES_ADMIN_PASSWORD')))
 
                 response = x.json()
