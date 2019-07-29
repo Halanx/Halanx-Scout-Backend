@@ -111,7 +111,7 @@ class ScoutTaskAdmin(admin.ModelAdmin):
                     'house_link')
     filter_horizontal = ('sub_tasks', 'review_tags')
     raw_id_fields = ('scout',)
-    readonly_fields = ('visit_link',)
+    readonly_fields = ('house_link', 'visit_link', 'booking_link')
 
 
 @admin.register(ScoutTaskAssignmentRequest)
