@@ -122,7 +122,10 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
                     name=NEW_MESSAGE_RECEIVED)
 
                 ScoutNotification.objects.create(category=new_message_received_notification_category, scout=scout,
-                                                 payload=MessageSerializer(msg).data, display=False)
+                                                 payload=MessageSerializer(msg,
+                                                                           context={
+                                                                               'requesting_participant': receiver_participant
+                                                                           }).data, display=False)
 
             elif receiver_participant.type == TYPE_CUSTOMER:
                 sentry_debug_logger.debug("send notification to consumer not implemented in scout app")
