@@ -24,7 +24,8 @@ def send_customer_notification(customer_id, title, content, category, payload):
             TASK_TYPE: CUSTOMER_NOTIFICATION_FROM_SCOUT_APP,
             "customer_id": customer_id,
             "notification_data": {"scout_name": str(customer.name)},
-            "notification_payload": {}
+            "notification_payload": {},
+            "category": category
         }
 
         x = requests.post(HALANX_HOMES_SCOUTAPI_URL, data=json.dumps(data),

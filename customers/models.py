@@ -1,5 +1,4 @@
 from django.db import models
-
 # Create your models here.
 from django.utils.html import format_html
 
@@ -28,8 +27,7 @@ class CustomerNotification(Notification):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            from customers.api.serializers import CustomerNotificationCategorySerializer
             send_customer_notification.delay(self.customer_id, title=self.category.name, content=self.content,
-                                             category=CustomerNotificationCategorySerializer(self.category).data,
+                                             category=NEW_SCOUT_MESSAGE_NC,
                                              payload=self.payload)
         super(CustomerNotification, self).save(*args, **kwargs)
