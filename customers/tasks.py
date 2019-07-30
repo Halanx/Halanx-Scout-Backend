@@ -22,7 +22,7 @@ def send_customer_notification(customer_id, title, content, category, payload, n
     try:
         data = {
             TASK_TYPE: CUSTOMER_NOTIFICATION_FROM_SCOUT_APP,
-            "customer_id": customer_id,
+            "customer_id": customer.id,
             "notification_data": notification_data,
             "notification_payload": payload,
             "category": category
