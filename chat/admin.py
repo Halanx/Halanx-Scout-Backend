@@ -1,5 +1,6 @@
 from django.contrib import admin
-from chat.models import Conversation, Message, Participant, SocketClient
+
+from chat.models import Conversation, Message, Participant
 
 
 @admin.register(Message)
@@ -15,8 +16,3 @@ class ParticipantAdmin(admin.ModelAdmin):
 @admin.register(Conversation)
 class ConversationModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'task', 'created_at', 'updated_at')
-
-
-@admin.register(SocketClient)
-class SocketClientModelAdmin(admin.ModelAdmin):
-    list_display = ('socket_id', 'participant')

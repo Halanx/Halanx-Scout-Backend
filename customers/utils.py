@@ -1,4 +1,2 @@
-from decouple import config
-from pyfcm import FCMNotification
-
-notify_customer = FCMNotification(api_key=config('HALANXHOMES_FCM_SERVER_KEY')).notify_single_device
+CUSTOMER_NOTIFICATION_FROM_SCOUT_APP = 'CUSTOMER_NOTIFICATION_FROM_SCOUT_APP'
+HALANX_HOMES_SCOUTAPI_URL = 'https://api.halanx.com/ScoutAPI/api/event/'
