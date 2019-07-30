@@ -200,6 +200,7 @@ class ScoutTaskListSerializer(serializers.ModelSerializer):
     house = serializers.SerializerMethodField()
     space = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
+    scout = ScoutDetailSerializer()
 
     class Meta:
         model = ScoutTask

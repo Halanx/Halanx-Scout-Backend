@@ -136,13 +136,13 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
 
                 customer_id = receiver_participant.customer_id
                 customer = Customer.objects.using(settings.HOMES_DB).get(id=customer_id)
-                from scouts.api.serializers import ScoutTaskDetailSerializer
-                payload = {"message_id": msg.id, 'task': ScoutTaskDetailSerializer(msg.conversation.task).data}
+                from scouts.api.serializers import ScoutTaskListSerializer
+                payload = {"message_id": msg.id, 'task_id': ScoutTaskListSerializer(msg.conversation.task).data}
                 cm = CustomerNotification(category=new_message_received_to_customer_notification_category,
                                           customer_id=customer_id,
                                           payload=payload, display=False)
 
-                cm.save(data={"scout_name": str(customer.name)})
+                cm.save(data={"scout_name": str(customer.name), 'message': msg.content})
 
 
 # remove later
