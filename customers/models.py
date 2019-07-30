@@ -25,9 +25,9 @@ class CustomerNotification(Notification):
     get_notification_image_html.short_description = 'Notification Image'
     get_notification_image_html.allow_tags = True
 
-    def save(self, *args, **kwargs):
+    def save(self, data=None, *args, **kwargs):
         if not self.pk:
             send_customer_notification.delay(self.customer_id, title=self.category.name, content=self.content,
                                              category=self.category.name,
-                                             payload=self.payload)
+                                             payload=self.payload, notification_data=data)
         super(CustomerNotification, self).save(*args, **kwargs)

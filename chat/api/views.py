@@ -17,6 +17,8 @@ from chat.models import Conversation, Message, Participant
 from chat.paginators import ChatPagination
 from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, NODE_SERVER_CHAT_ENDPOINT, \
     SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX
+from customers.models import CustomerNotification, CustomerNotificationCategory
+from customers.utils import NEW_SCOUT_MESSAGE_NC
 from scouts.models import Scout, ScoutTask, ScoutNotification, ScoutNotificationCategory
 from scouts.utils import NEW_MESSAGE_RECEIVED
 from utility.environments import PRODUCTION
@@ -128,7 +130,17 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
                                                                            }).data, display=False)
 
             elif receiver_participant.type == TYPE_CUSTOMER:
-                sentry_debug_logger.debug("send notification to consumer not implemented in scout app")
+
+                new_message_received_to_customer_notification_category, _ = CustomerNotificationCategory.objects. \
+                    get_or_create(name=NEW_SCOUT_MESSAGE_NC)
+
+                customer_id = receiver_participant.customer_id
+                customer = Customer.objects.using(settings.HOMES_DB).get(id=customer_id)
+                cm = CustomerNotification(category=new_message_received_to_customer_notification_category,
+                                          customer_id=customer_id,
+                                          payload={"my_custom_payload": "okk"}, display=False)
+
+                cm.save(data={"scout_name": str(customer.name)})
 
 
 # remove later

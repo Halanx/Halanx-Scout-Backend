@@ -13,7 +13,7 @@ logger = get_task_logger(__name__)
 
 
 @shared_task
-def send_customer_notification(customer_id, title, content, category, payload):
+def send_customer_notification(customer_id, title, content, category, payload, notification_data):
     logger.info("Sending notification to customer id {}".format(customer_id))
 
     from UserBase.models import Customer
@@ -23,8 +23,8 @@ def send_customer_notification(customer_id, title, content, category, payload):
         data = {
             TASK_TYPE: CUSTOMER_NOTIFICATION_FROM_SCOUT_APP,
             "customer_id": customer_id,
-            "notification_data": {"scout_name": str(customer.name)},
-            "notification_payload": {},
+            "notification_data": notification_data,
+            "notification_payload": payload,
             "category": category
         }
 
