@@ -13,7 +13,7 @@ logger = get_task_logger(__name__)
 
 
 @shared_task
-def send_customer_notification(customer_id):
+def send_customer_notification(customer_id, title, content, category, payload):
     logger.info("Sending notification to customer id {}".format(customer_id))
 
     from UserBase.models import Customer

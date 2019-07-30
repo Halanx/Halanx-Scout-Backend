@@ -1,5 +1,7 @@
 import json
 from copy import deepcopy
+
+import requests
 from decouple import config
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -11,19 +13,16 @@ from rest_framework.response import Response
 
 from UserBase.models import Customer
 from chat.api.serializers import ConversationListSerializer, MessageSerializer
-from chat.models import Conversation, Message, Participant, SocketClient
+from chat.models import Conversation, Message, Participant
 from chat.paginators import ChatPagination
-from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, SOCKET_STATUS_CONNECTED, SOCKET_STATUS_DISCONNECTED, \
-    NODE_SERVER_CHAT_ENDPOINT, SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX, HALANX_SCOUT_CHAT_API_URL
+from chat.utils import TYPE_CUSTOMER, TYPE_SCOUT, NODE_SERVER_CHAT_ENDPOINT, \
+    SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX
 from scouts.models import Scout, ScoutTask, ScoutNotification, ScoutNotificationCategory
 from scouts.utils import NEW_MESSAGE_RECEIVED
 from utility.environments import PRODUCTION
 from utility.logging_utils import sentry_debug_logger
 from utility.redis_utils import ConsumerAppRedis
 from utility.rest_auth_utils import ChatParticipantAuthentication
-from rest_framework.decorators import api_view, authentication_classes
-from django.http import JsonResponse
-import requests
 
 
 def get_participant_from_request(request):
