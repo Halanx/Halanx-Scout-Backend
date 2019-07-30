@@ -28,6 +28,6 @@ class CustomerNotification(Notification):
     def save(self, *args, **kwargs):
         if not self.pk:
             send_customer_notification.delay(self.customer_id, title=self.category.name, content=self.content,
-                                             category=NEW_SCOUT_MESSAGE_NC,
+                                             category=self.category.name,
                                              payload=self.payload)
         super(CustomerNotification, self).save(*args, **kwargs)
