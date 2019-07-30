@@ -200,11 +200,16 @@ class ScoutTaskListSerializer(serializers.ModelSerializer):
     house = serializers.SerializerMethodField()
     space = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
-    scout = ScoutDetailSerializer()
+    scout_data = serializers.SerializerMethodField()
 
     class Meta:
         model = ScoutTask
-        fields = ('id', 'scout', 'category', 'earning', 'scheduled_at', 'house', 'space', 'customer', 'conversation')
+        fields = ('id', 'scout', 'category', 'earning', 'scheduled_at', 'house', 'space', 'customer', 'conversation',
+                  'scout_data')
+
+    @staticmethod
+    def get_scout_data(obj):
+        return ScoutDetailSerializer(obj.scout).data
 
     @staticmethod
     def get_house(obj):
