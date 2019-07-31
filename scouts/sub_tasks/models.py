@@ -1,7 +1,8 @@
 from django.db import models
-from rest_framework.fields import JSONField
+from jsonfield import JSONField
 
 from scouts.models import ScoutTask, ScoutTaskCategory, ScoutSubTaskCategory
+from scouts.sub_tasks.utils import MOVE_OUT_AMENITIES_CHECKUP_DEFAULT_JSON
 from scouts.utils import MOVE_OUT
 
 
@@ -14,7 +15,7 @@ class MoveOutSubTask(models.Model):
 
 
 class MoveOutAmenitiesCheckup(MoveOutSubTask):
-    amenities_json = JSONField()
+    amenities_json = JSONField(default=MOVE_OUT_AMENITIES_CHECKUP_DEFAULT_JSON)
     task = models.OneToOneField(ScoutTask, on_delete=models.SET_NULL, null=True, blank=True,
                                 related_name='move_out_amenity_checkup')
 
