@@ -29,7 +29,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE, NEW_PAYMENT_RECEIVED, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_wallet, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account, MOVE_OUT, \
-    MOVE_OUT_AMENITY_CHECKUP
+    MOVE_OUT_AMENITY_CHECKUP, MOVE_OUT_REMARK
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 
@@ -523,12 +523,14 @@ def manage_scout_task_conversation(instance):
 
 def manage_scout_sub_tasks_for_new_task(instance):
     if instance.category.name == MOVE_OUT:
-        remark_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(name=MOVE_OUT_AMENITY_CHECKUP,
+        remark_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(name=MOVE_OUT_REMARK,
                                                                                 task_category=instance.category)
+        amenity_checkup_category, _ = ScoutSubTaskCategory.objects.get_or_create(name=MOVE_OUT_AMENITY_CHECKUP,
+                                                                                 task_category=instance.category)
 
         from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup
         MoveOutRemark(task=instance, parent_subtask_category=remark_subtask_category).save()
-        MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=remark_subtask_category).save()
+        MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=amenity_checkup_category).save()
         super(ScoutTask, instance).save()
 
 
