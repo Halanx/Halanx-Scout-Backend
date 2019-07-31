@@ -86,7 +86,8 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
     SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX used for conversation between scout and customer
 
     # TODO: The chat may fail when scout chats with customer when scout_id = customer_id because that will lead to
-    # TODO: same key for redis i.e for e.g  SCOUTCHAT:5 = SCOUTCHAT:5
+    # TODO: same key for redis i.e for e.g  SCOUTCHAT:5 = SCOUTCHAT:5 so the better solution will be to use
+    participant id
     """
     data_copy = deepcopy(data)
 
