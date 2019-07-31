@@ -20,6 +20,7 @@ from chat.utils import TYPE_SCOUT, TYPE_CUSTOMER
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories, WITHDRAWAL, \
     PaymentTypeCategories, DEPOSIT
+from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup
 from scouts.tasks import send_scout_notification, scout_assignment_request_set_rejected
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
@@ -27,7 +28,8 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
     REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE, NEW_PAYMENT_RECEIVED, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_wallet, \
-    get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account
+    get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account, HOUSE_VISIT, MOVE_OUT, \
+    MOVE_OUT_AMENITY_CHECKUP
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 
@@ -215,7 +217,7 @@ class ScheduledAvailability(models.Model):
 
 
 class ScoutTaskCategory(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     image = models.ImageField(upload_to=get_scout_task_category_image_upload_path, null=True, blank=True)
     earning = models.FloatField(default=0)
 
@@ -340,6 +342,7 @@ class ScoutTask(models.Model):
 
         except Exception as E:
             return str(E)
+
     visit_link.short_description = 'Visit Link'
 
     def house_link(self):
@@ -360,6 +363,7 @@ class ScoutTask(models.Model):
 
         except Exception as E:
             return str(E)
+
     house_link.short_description = 'House Link'
 
     def booking_link(self):
@@ -380,6 +384,7 @@ class ScoutTask(models.Model):
 
         except Exception as E:
             return str(E)
+
     booking_link.short_description = 'Booking Link'
 
 
@@ -505,18 +510,31 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
         scout.save()
 
 
+def manage_scout_task_conversation(instance):
+    conversation, created = Conversation.objects.get_or_create(task=instance)
+    customer = instance.customer
+    if customer:
+        customer_participant, created = Participant.objects.get_or_create(customer_id=customer.id,
+                                                                          type=TYPE_CUSTOMER)
+
+        if customer_participant not in conversation.participants.all():
+            conversation.participants.add(customer_participant)
+
+
+def manage_scout_sub_tasks_for_new_task(instance):
+    if instance.category.name == MOVE_OUT:
+        remark_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(name=MOVE_OUT_AMENITY_CHECKUP,
+                                                                                task_category=instance.category)
+        MoveOutRemark(task=instance, parent_subtask_category=remark_subtask_category).save()
+        MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=remark_subtask_category).save()
+        super(ScoutTask, instance).save()
+
+
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=ScoutTask)
 def scout_task_post_save_hook(sender, instance, created, **kwargs):
     if created:
-        conversation, created = Conversation.objects.get_or_create(task=instance)
-        customer = instance.customer
-        if customer:
-            customer_participant, created = Participant.objects.get_or_create(customer_id=customer.id,
-                                                                              type=TYPE_CUSTOMER)
-
-            if customer_participant not in conversation.participants.all():
-                conversation.participants.add(customer_participant)
+        manage_scout_task_conversation(instance)
 
 
 # noinspection PyUnusedLocal

@@ -67,6 +67,10 @@ TASK_TYPE = 'task_type'
 HOUSE_VISIT = 'House Visit'
 HOUSE_VISIT_CANCELLED = 'House Visit Cancelled'
 
+MOVE_OUT = 'Move Out'
+MOVE_OUT_REMARK = 'Move Out Remark'
+MOVE_OUT_AMENITY_CHECKUP = 'Move Out Amenity Checkup'
+
 
 def get_nearby_scouts(latitude, longitude, distance_range=50, queryset=None):
     from scouts.models import Scout

@@ -1,7 +1,7 @@
 from django.conf.urls import url
+from django.urls import include
 
 from scouts.api import views
-
 
 urlpatterns = (
     url(r'^register/$', views.register),
@@ -24,6 +24,10 @@ urlpatterns = (
     url(r'^tasks/$', views.ScoutTaskListView.as_view()),
     url(r'^tasks/(?P<pk>\d+)/$', views.ScoutTaskRetrieveUpdateDestroyAPIView.as_view()),
     url(r'^tasks/(?P<pk>\d+)/request/$', views.ScoutTaskAssignmentRequestUpdateAPIView.as_view()),
+
+    # sub_tasks sub app
+    url(r'^tasks/(?P<task_id>\d+)/subtask/', include('scouts.sub_tasks.urls')),
+
 
     url(r'^tenant/$', views.TenantRetrieveView.as_view()),
 

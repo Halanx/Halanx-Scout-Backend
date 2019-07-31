@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     'scouts',
     'customers',
     'chat',
+
+    'scouts.sub_tasks',
 ]
 
 MIDDLEWARE = [
