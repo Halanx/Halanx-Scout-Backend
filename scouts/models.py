@@ -539,6 +539,7 @@ def manage_scout_sub_tasks_for_new_task(instance):
 def scout_task_post_save_hook(sender, instance, created, **kwargs):
     if created:
         manage_scout_task_conversation(instance)
+        manage_scout_sub_tasks_for_new_task(instance)
 
 
 # noinspection PyUnusedLocal

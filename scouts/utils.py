@@ -5,6 +5,7 @@ from geopy import units, distance
 from pyfcm import FCMNotification
 
 from Homes.Houses.models import House, HouseVisit
+from utility.logging_utils import sentry_debug_logger
 from utility.random_utils import generate_random_code
 
 notify_scout = FCMNotification(api_key=config('FCM_SERVER_KEY')).notify_single_device
@@ -134,7 +135,7 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
                                Q(scheduled_availabilities__end_time__gte=house_visit.scheduled_visit_time) &
                                Q(scheduled_availabilities__cancelled=False))
 
-    # sentry_debug_logger.debug("queryset is " + str(scouts))
+    sentry_debug_logger.debug("queryset is " + str(scouts))
 
     sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
                                              house_longitude=house.address.longitude,
