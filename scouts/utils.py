@@ -5,7 +5,6 @@ from geopy import units, distance
 from pyfcm import FCMNotification
 
 from Homes.Houses.models import House, HouseVisit
-from utility.logging_utils import sentry_debug_logger
 from utility.random_utils import generate_random_code
 
 notify_scout = FCMNotification(api_key=config('FCM_SERVER_KEY')).notify_single_device
@@ -88,17 +87,17 @@ def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=50,
         from scouts.models import Scout
         queryset = Scout.objects.all()
 
-    from scouts.models import Flag
+    # from scouts.models import Flag
     # if manual control is enabled switch calls by priority
-    flag = Flag.objects.filter(name='MANUAL_CONTROL_FOR_SCOUTS').first()
-    if flag:
-        if flag.enabled:
-            sentry_debug_logger.debug("using manual control")
-            queryset = queryset.order_by('-priority')
-            result = []
-            for scout in queryset:
-                result.append((scout, 0))  # just random distance (0) in result
-            return result
+    # flag = Flag.objects.filter(name='MANUAL_CONTROL_FOR_SCOUTS').first()
+    # if flag:
+    #     if flag.enabled:
+    #         sentry_debug_logger.debug("using manual control")
+    #         queryset = queryset.order_by('-priority')
+    #         result = []
+    #         for scout in queryset:
+    #             result.append((scout, 0))  # just random distance (0) in result
+    #         return result
 
     queryset = get_nearby_scouts(house_latitude, house_longitude, distance_range, queryset)
 
@@ -110,11 +109,11 @@ def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=50,
             result.append((scout, exact_distance))
 
     result.sort(key=lambda x: x[1])
-    sentry_debug_logger.debug("sorted scouts are " + str(result))
+    # sentry_debug_logger.debug("sorted scouts are " + str(result))
     return result
 
 
-def get_appropriate_scout_for_the_house_visit_task(task, scouts=None, old_assignment_request=None, new_assignment_request=None):
+def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
     from scouts.models import ScoutTaskAssignmentRequest
     from scouts.models import Scout
 
@@ -135,7 +134,7 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None, old_assign
                                Q(scheduled_availabilities__end_time__gte=house_visit.scheduled_visit_time) &
                                Q(scheduled_availabilities__cancelled=False))
 
-    sentry_debug_logger.debug("queryset is " + str(scouts))
+    # sentry_debug_logger.debug("queryset is " + str(scouts))
 
     sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
                                              house_longitude=house.address.longitude,
@@ -152,7 +151,7 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None, old_assign
     except Exception as E:
         selected_scout = None
 
-    sentry_debug_logger.debug("received scout is " + str(selected_scout))
+    # sentry_debug_logger.debug("received scout is " + str(selected_scout))
 
     return selected_scout
 

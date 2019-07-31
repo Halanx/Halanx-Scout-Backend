@@ -91,7 +91,7 @@ class ConversationListSerializer(serializers.ModelSerializer):
             return ParticipantSerializer(other_participant).data
         except Exception as E:
             from utility.logging_utils import sentry_debug_logger
-            sentry_debug_logger.debug("error is " + str(E), exc_info=True)
+            sentry_debug_logger.error("error is " + str(E), exc_info=True)
             return None
 
     def get_last_message(self, obj):

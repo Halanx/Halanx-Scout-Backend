@@ -1,9 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from scouts.models import ScoutSubTaskCategory
 from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup
-from scouts.utils import HOUSE_VISIT, MOVE_OUT
 from utility.admin_site_utils import custom_titled_filter
 
 

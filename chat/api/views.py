@@ -78,16 +78,9 @@ class ConversationListView(ListAPIView):
 
 def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_participant):
     """
-    In this chat when Scout is sending a message we publish message with sender as scout id and receiver as
-    receiving customer id. and if Scout is receiving a message then we publish message with sender as customer_id
-    and receiver as scout id
-    For more reference see Halanx-node/index.js AND
-    Halanx-db/Chat/api/views.py - scout_chat_view
-    SCOUT_CUSTOMER_SOCKET_CHAT_CONVERSATION_PREFIX used for conversation between scout and customer
-
     # TODO: The chat may fail when scout chats with customer when scout_id = customer_id because that will lead to
-    # TODO: same key for redis i.e for e.g  SCOUTCHAT:5 = SCOUTCHAT:5 so the better solution will be to use
-    participant id
+    # TODO: same key for redis i.e for e.g  SCOUTCHAT:5 = SCOUTCHAT:5 so the better solution will be to use participant
+    # TODO: id
     """
     data_copy = deepcopy(data)
 
@@ -107,7 +100,7 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
         r = ConsumerAppRedis()
 
         if r.get(data['receiver']):  # Receiver is Online
-            sentry_debug_logger.debug("user is online")
+            # sentry_debug_logger.debug("user is online")
             data['message_data'] = data_copy
             # In case of socket the role will always be receiver
             data['message_data']['role'] = 'receiver'
@@ -118,7 +111,7 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
                 r.publish('onChat', msg)
 
         else:
-            sentry_debug_logger.debug('user is offline')
+            # sentry_debug_logger.debug('user is offline')
 
             if receiver_participant.type == TYPE_SCOUT:
                 new_message_received_notification_category, _ = ScoutNotificationCategory.objects.get_or_create(
@@ -144,19 +137,6 @@ def send_message_to_receiver_participant_via_consumer_app(msg, data, receiver_pa
                                           payload=payload, display=False)
 
                 cm.save(data={"scout_name": str(customer.name), 'message': msg.content})
-
-
-# remove later
-def send_message_to_receiver_participant_via_socket(data, receiver_participant):
-    try:
-        request_data = {'data': data, 'receiver_socket_id': receiver_participant.socket_clients.first().socket_id,
-                        'server_password': config('NODEJS_SERVER_PASSWORD')}
-        x = requests.post(NODE_SERVER_CHAT_ENDPOINT, data=request_data)
-        sentry_debug_logger.info('response is ' + str(x) + str(x.content))
-        return x.status_code
-    except Exception as E:
-        sentry_debug_logger.info('exception is' + str(E))
-        return None
 
 
 class MessageListCreateView(ListCreateAPIView):

@@ -553,9 +553,9 @@ def scout_task_assignment_request_post_save_hook(sender, instance, created, **kw
         try:
             send_date = timezone.now() + timedelta(seconds=20)
             scout_assignment_request_set_rejected.apply_async([instance.id], eta=send_date)
-            sentry_debug_logger.debug('auto rejecting after 2 minutes', exc_info=True)
+            # sentry_debug_logger.debug('auto rejecting after 2 minutes', exc_info=True)
         except Exception as E:
-            sentry_debug_logger.error('error is ' + str(E), exc_info=True)
+            sentry_debug_logger.error('error while auto rejecting task is ' + str(E), exc_info=True)
 
 
 # noinspection PyUnusedLocal
@@ -581,14 +581,12 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
         elif instance.status == REQUEST_REJECTED:
             # find some other scout to send notification to
             # create another scout task assignment request
-            sentry_debug_logger.debug('scout rejected the request')
+            # sentry_debug_logger.debug('scout rejected the request')
 
             # find another scout for the visit task excluding this scout
             scout = get_appropriate_scout_for_the_house_visit_task(task=task,
                                                                    scouts=Scout.objects.filter(active=True).exclude(
-                                                                       id=instance.scout.id),
-                                                                   old_assignment_request=old_request,
-                                                                   new_assignment_request=instance
+                                                                       id=instance.scout.id)
                                                                    )
 
             if scout:

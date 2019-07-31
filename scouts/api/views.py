@@ -357,7 +357,6 @@ class ScoutTaskAssignmentRequestUpdateAPIView(AuthenticatedRequestMixin, UpdateA
     queryset = ScoutTaskAssignmentRequest.objects.all()
 
     def get_object(self):
-        sentry_debug_logger.debug("updating task assignment")
         task = get_object_or_404(ScoutTask, pk=self.kwargs.get('pk'), status=UNASSIGNED)
         assignment_request = task.assignment_requests.filter(scout__user=self.request.user,
                                                              status=REQUEST_AWAITED).last()
@@ -392,9 +391,7 @@ class ScoutConsumerLinkView(GenericAPIView):
 
     def post(self, request):
         print(request)
-        sentry_debug_logger.debug('received scout task assignment', exc_info=True)
         data = request.data['data']
-        sentry_debug_logger.debug('complete data is ' + str(request.data))
         if request.data[TASK_TYPE] == HOUSE_VISIT:
             # Create a task
             task_category = ScoutTaskCategory.objects.get(name=HOUSE_VISIT)
@@ -418,7 +415,6 @@ class ScoutConsumerLinkView(GenericAPIView):
                     ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
                     return JsonResponse({'detail': 'done'})
                 else:
-                    sentry_debug_logger.error("No scout found")
                     return JsonResponse({'detail': 'No scout found'}, status=400)
             except Exception as E:
                 sentry_debug_logger.error('Error while creating new scout with error' + str(E), exc_info=True)
@@ -532,6 +528,6 @@ def rate_scout(request):
                             status=status.HTTP_403_FORBIDDEN)
 
     except Exception as E:
-        sentry_debug_logger.debug('some error occured' + str(E), exc_info=True)
+        sentry_debug_logger.error('some error occured' + str(E), exc_info=True)
         error_response = {STATUS: ERROR, 'message': 'Some error occured'}
         return Response(error_response)
