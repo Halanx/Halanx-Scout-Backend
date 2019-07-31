@@ -142,3 +142,5 @@ LOGGING = {
 }
 
 HALANX_HOMES_ADMIN_URL = "https://api.halanx.com/admin/halanxhomes"
+# sentry_registered_email = 'kimawezo@mini-mail.net'
+# sentry_registered_password = 'abcd1234'
