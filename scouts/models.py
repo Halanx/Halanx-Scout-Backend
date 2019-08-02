@@ -403,8 +403,10 @@ class ScoutTask(models.Model):
                 return mark_safe(url)
 
             else:
-                return str('No Booking')
+                return str('No move out request')
 
+        except Exception as E:
+            return str(E)
 
 
 class ScoutTaskAssignmentRequest(models.Model):
