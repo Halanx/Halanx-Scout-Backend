@@ -43,11 +43,11 @@ class PropertyOnBoardingHouseAddress(PropertyOnBoardingSubTask):  # SubTask 1
     task = models.OneToOneField(ScoutTask, on_delete=models.SET_NULL, null=True, blank=True,
                                 related_name='property_on_board_house_address')
     location = models.CharField(max_length=200, null=True, blank=True)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     street_address = models.CharField(max_length=200)
-    city = models.CharField(max_length=50)
-    state = models.CharField(max_length=50)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    state = models.CharField(max_length=50, null=True, blank=True)
 
 
 class PropertyOnBoardingHousePhoto(PropertyOnBoardingSubTask):  # SubTask 2

@@ -557,30 +557,32 @@ def manage_scout_sub_tasks_for_new_task(instance):
         MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=amenity_checkup_category).save()
         super(ScoutTask, instance).save()
 
-    if instance.category.name == PROPERTY_ONBOARDING:
-        property_onboard_house_address_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
-            name=PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, task_category=instance.category)
+    # if instance.category.name == PROPERTY_ONBOARDING:
+    #     property_onboard_house_address_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
+    #         name=PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, task_category=instance.category)
+    #
+    #     property_onboard_house_photos_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
+    #         name=PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, task_category=instance.category)
+    #
+    #     property_onboard_house_amenity_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
+    #         name=PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, task_category=instance.category)
+    #
+    #     property_onboard_house_basic_details_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
+    #         name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK, task_category=instance.category)
 
-        property_onboard_house_photos_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
-            name=PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, task_category=instance.category)
+        # from scouts.sub_tasks.models import PropertyOnBoardingHouseAddress, PropertyOnBoardingHousePhoto, \
+        #     PropertyOnBoardingHouseAmenity, PropertyOnBoardingHouseBasicDetail
 
-        property_onboard_house_amenity_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
-            name=PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, task_category=instance.category)
+        # PropertyOnBoardingHouseAddress(task=instance,
+        #                                parent_subtask_category=property_onboard_house_address_subtask_category).save()
+        # PropertyOnBoardingHousePhoto(task=instance,
+        #                              parent_subtask_category=property_onboard_house_photos_subtask_category).save()
+        # PropertyOnBoardingHouseAmenity(task=instance,
+        #                                parent_subtask_category=property_onboard_house_amenity_subtask_category).save()
+        # PropertyOnBoardingHouseBasicDetail(task=instance,
+        #                                    parent_subtask_category=property_onboard_house_basic_details_subtask_category).save()
 
-        property_onboard_house_basic_details_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
-            name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK, task_category=instance.category)
-
-        from scouts.sub_tasks.models import PropertyOnBoardingHouseAddress, PropertyOnBoardingHousePhoto, \
-            PropertyOnBoardingHouseAmenity, PropertyOnBoardingHouseBasicDetail
-
-        PropertyOnBoardingHouseAddress.objects.create(
-            task=instance, parent_subtask_category=property_onboard_house_address_subtask_category)
-        PropertyOnBoardingHousePhoto.objects.create(
-            task=instance, parent_subtask_category=property_onboard_house_photos_subtask_category)
-        PropertyOnBoardingHouseAmenity.objects.create(
-            task=instance, parent_subtask_category=property_onboard_house_amenity_subtask_category)
-        PropertyOnBoardingHouseBasicDetail.objects.create(
-            task=instance, parent_subtask_category=property_onboard_house_basic_details_subtask_category)
+        # super(ScoutTask, instance).save()
 
 
 # noinspection PyUnusedLocal
