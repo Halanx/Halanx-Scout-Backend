@@ -573,16 +573,14 @@ def manage_scout_sub_tasks_for_new_task(instance):
         from scouts.sub_tasks.models import PropertyOnBoardingHouseAddress, PropertyOnBoardingHousePhoto, \
             PropertyOnBoardingHouseAmenity, PropertyOnBoardingHouseBasicDetail
 
-        PropertyOnBoardingHouseAddress(task=instance,
-                                       parent_subtask_category=property_onboard_house_address_subtask_category).save()
-        PropertyOnBoardingHousePhoto(task=instance,
-                                     parent_subtask_category=property_onboard_house_photos_subtask_category).save()
-        PropertyOnBoardingHouseAmenity(task=instance,
-                                       parent_subtask_category=property_onboard_house_amenity_subtask_category).save()
-        PropertyOnBoardingHouseBasicDetail(task=instance,
-                                           parent_subtask_category=property_onboard_house_basic_details_subtask_category).save()
-
-        super(ScoutTask, instance).save()
+        PropertyOnBoardingHouseAddress.objects.create(
+            task=instance, parent_subtask_category=property_onboard_house_address_subtask_category)
+        PropertyOnBoardingHousePhoto.objects.create(
+            task=instance, parent_subtask_category=property_onboard_house_photos_subtask_category)
+        PropertyOnBoardingHouseAmenity.objects.create(
+            task=instance, parent_subtask_category=property_onboard_house_amenity_subtask_category)
+        PropertyOnBoardingHouseBasicDetail.objects.create(
+            task=instance, parent_subtask_category=property_onboard_house_basic_details_subtask_category)
 
 
 # noinspection PyUnusedLocal
