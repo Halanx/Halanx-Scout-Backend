@@ -123,11 +123,11 @@ def get_appropriate_scout_for_the_task(task, scouts=None):
 
     scheduled_task_time = None
 
-    if task.type == HOUSE_VISIT:
+    if task.category.name == HOUSE_VISIT:
         house_visit = HouseVisit.objects.using(settings.HOMES_DB).filter(id=task.visit_id).first()
         scheduled_task_time = house_visit.scheduled_visit_time
 
-    elif task.type == MOVE_OUT:
+    elif task.category.name == MOVE_OUT:
         scheduled_task_time = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=task.move_out_request_id)\
             .first().timing
 

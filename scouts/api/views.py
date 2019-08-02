@@ -481,7 +481,6 @@ class ScoutConsumerLinkView(GenericAPIView):
                 return JsonResponse({STATUS: ERROR, 'message': "No such task exists"})
 
 
-
 class HouseVisitScoutDetailView(GenericAPIView):
     serializer_class = ScoutTaskForHouseVisitSerializer
     permission_classes = [IsAuthenticated, ]
