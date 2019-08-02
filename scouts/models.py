@@ -395,10 +395,10 @@ class ScoutTask(models.Model):
                 move_out_request = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=self.move_out_request_id).first()
                 if move_out_request:
                     url = '<a href="%s/Tenants/tenantmoveoutrequest/%s/">Click to see ' \
-                          'Booking</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.booking_id))
+                          'Move Out Request</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.move_out_request_id))
                 else:
-                    url = '<a href="%s/Tenants/tenantmoveoutrequest/%s/">Booking Not Found' \
-                          '</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.booking_id))
+                    url = '<a href="%s/Tenants/tenantmoveoutrequest/%s/">Move Out Request Not Found' \
+                          '</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.move_out_request_id))
 
                 return mark_safe(url)
 
