@@ -11,34 +11,6 @@ from utility.random_utils import generate_random_code
 
 notify_scout = FCMNotification(api_key=config('FCM_SERVER_KEY')).notify_single_device
 
-
-def get_picture_upload_path(instance, filename):
-    return "scouts/{}/pictures/{}-{}".format(instance.scout.id, generate_random_code(n=5),
-                                             filename.split('/')[-1])
-
-
-def get_thumbnail_upload_path(instance, filename):
-    return "scouts/{}/thumbnail/{}-{}".format(instance.scout.id, generate_random_code(n=5),
-                                              filename.split('/')[-1])
-
-
-def get_scout_document_upload_path(instance, filename):
-    return "scouts/{}/documents/{}-{}/{}-{}".format(instance.scout.id, instance.type, instance.id,
-                                                    generate_random_code(n=5), filename.split('/')[-1])
-
-
-def get_scout_document_thumbnail_upload_path(instance, filename):
-    return "scouts/{}/documents/{}-{}/thumbnail/{}-{}".format(instance.scout.id, instance.type, instance.id,
-                                                              generate_random_code(n=5), filename.split('/')[-1])
-
-
-def get_scout_task_category_image_upload_path(instance, filename):
-    return "scout-task-categories/{}/{}-{}".format(instance.id, generate_random_code(n=5), filename.split('/')[-1])
-
-
-default_profile_pic_url = "https://{}/static/img/nopic.jpg".format(config('AWS_S3_CUSTOM_DOMAIN'))
-default_profile_pic_thumbnail_url = "https://{}/static/img/nopic_small.jpg".format(config('AWS_S3_CUSTOM_DOMAIN'))
-
 UNASSIGNED = 'unassigned'
 ASSIGNED = 'assigned'
 COMPLETE = 'complete'
@@ -71,6 +43,41 @@ HOUSE_VISIT_CANCELLED = 'House Visit Cancelled'
 MOVE_OUT = 'Move Out'
 MOVE_OUT_REMARK = 'Move Out Remark'
 MOVE_OUT_AMENITY_CHECKUP = 'Move Out Amenity Checkup'
+
+PROPERTY_ONBOARDING = 'Property Onboarding'
+PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK = 'Property Onboarding House Address Subtask'
+PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK = 'Property Onboarding House Photos Subtask'
+PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK = 'Property Onboarding House Amenity Subtask'
+PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK = 'Property Onboarding House Basic Details Subtask'
+
+
+
+def get_picture_upload_path(instance, filename):
+    return "scouts/{}/pictures/{}-{}".format(instance.scout.id, generate_random_code(n=5),
+                                             filename.split('/')[-1])
+
+
+def get_thumbnail_upload_path(instance, filename):
+    return "scouts/{}/thumbnail/{}-{}".format(instance.scout.id, generate_random_code(n=5),
+                                              filename.split('/')[-1])
+
+
+def get_scout_document_upload_path(instance, filename):
+    return "scouts/{}/documents/{}-{}/{}-{}".format(instance.scout.id, instance.type, instance.id,
+                                                    generate_random_code(n=5), filename.split('/')[-1])
+
+
+def get_scout_document_thumbnail_upload_path(instance, filename):
+    return "scouts/{}/documents/{}-{}/thumbnail/{}-{}".format(instance.scout.id, instance.type, instance.id,
+                                                              generate_random_code(n=5), filename.split('/')[-1])
+
+
+def get_scout_task_category_image_upload_path(instance, filename):
+    return "scout-task-categories/{}/{}-{}".format(instance.id, generate_random_code(n=5), filename.split('/')[-1])
+
+
+default_profile_pic_url = "https://{}/static/img/nopic.jpg".format(config('AWS_S3_CUSTOM_DOMAIN'))
+default_profile_pic_thumbnail_url = "https://{}/static/img/nopic_small.jpg".format(config('AWS_S3_CUSTOM_DOMAIN'))
 
 
 def get_nearby_scouts(latitude, longitude, distance_range=50, queryset=None):
@@ -128,7 +135,7 @@ def get_appropriate_scout_for_the_task(task, scouts=None):
         scheduled_task_time = house_visit.scheduled_visit_time
 
     elif task.category.name == MOVE_OUT:
-        scheduled_task_time = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=task.move_out_request_id)\
+        scheduled_task_time = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=task.move_out_request_id) \
             .first().timing
 
     if scouts is None:

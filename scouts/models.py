@@ -30,7 +30,9 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     REQUEST_REJECTED, ASSIGNED, COMPLETE, NEW_PAYMENT_RECEIVED, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_wallet, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account, MOVE_OUT, \
-    MOVE_OUT_AMENITY_CHECKUP, MOVE_OUT_REMARK, get_appropriate_scout_for_the_task
+    MOVE_OUT_AMENITY_CHECKUP, MOVE_OUT_REMARK, get_appropriate_scout_for_the_task, PROPERTY_ONBOARDING, \
+    PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, \
+    PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 
@@ -392,7 +394,8 @@ class ScoutTask(models.Model):
     def move_out_request_link(self):
         try:
             if self.move_out_request_id:
-                move_out_request = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=self.move_out_request_id).first()
+                move_out_request = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(
+                    id=self.move_out_request_id).first()
                 if move_out_request:
                     url = '<a href="%s/Tenants/tenantmoveoutrequest/%s/">Click to see ' \
                           'Move Out Request</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.move_out_request_id))
@@ -552,6 +555,33 @@ def manage_scout_sub_tasks_for_new_task(instance):
         from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup
         MoveOutRemark(task=instance, parent_subtask_category=remark_subtask_category).save()
         MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=amenity_checkup_category).save()
+        super(ScoutTask, instance).save()
+
+    if instance.category.name == PROPERTY_ONBOARDING:
+        property_onboard_house_address_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
+            name=PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, task_category=instance.category)
+
+        property_onboard_house_photos_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
+            name=PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, task_category=instance.category)
+
+        property_onboard_house_amenity_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
+            name=PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, task_category=instance.category)
+
+        property_onboard_house_basic_details_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
+            name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK, task_category=instance.category)
+
+        from scouts.sub_tasks.models import PropertyOnBoardingHouseAddress, PropertyOnBoardingHousePhoto, \
+            PropertyOnBoardingHouseAmenity, PropertyOnBoardingHouseBasicDetail
+
+        PropertyOnBoardingHouseAddress(task=instance,
+                                       parent_subtask_category=property_onboard_house_address_subtask_category).save()
+        PropertyOnBoardingHousePhoto(task=instance,
+                                     parent_subtask_category=property_onboard_house_photos_subtask_category).save()
+        PropertyOnBoardingHouseAmenity(task=instance,
+                                       parent_subtask_category=property_onboard_house_amenity_subtask_category).save()
+        PropertyOnBoardingHouseBasicDetail(task=instance,
+                                           parent_subtask_category=property_onboard_house_basic_details_subtask_category).save()
+
         super(ScoutTask, instance).save()
 
 
