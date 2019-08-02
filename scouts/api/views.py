@@ -426,7 +426,7 @@ class ScoutConsumerLinkView(GenericAPIView):
             # fetch visit details
             house_id = House.objects.using(settings.HOMES_DB).get(id=data['house_id']).id
             booking_id = Booking.objects.using(settings.HOMES_DB).get(id=data['booking_id']).id
-            move_out_request = TenantMoveOutRequest.objects.get(id=data['move_out_request_id'])
+            move_out_request = TenantMoveOutRequest.using(settings.HOMES_DB).objects.get(id=data['move_out_request_id'])
             scheduled_at = move_out_request.timing
 
             scout_task = ScoutTask.objects.create(category=move_out_task_category,
