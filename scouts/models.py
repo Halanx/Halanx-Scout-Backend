@@ -15,6 +15,7 @@ from django.utils.safestring import mark_safe
 
 from Homes.Bookings.models import Booking
 from Homes.Houses.models import HouseVisit, House
+from Homes.Tenants.models import TenantMoveOutRequest
 from chat.models import Conversation, Participant
 from chat.utils import TYPE_SCOUT, TYPE_CUSTOMER
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
@@ -387,6 +388,23 @@ class ScoutTask(models.Model):
             return str(E)
 
     booking_link.short_description = 'Booking Link'
+
+    def move_out_request_link(self):
+        try:
+            if self.move_out_request_id:
+                move_out_request = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=self.move_out_request_id).first()
+                if move_out_request:
+                    url = '<a href="%s/Tenants/tenantmoveoutrequest/%s/">Click to see ' \
+                          'Booking</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.booking_id))
+                else:
+                    url = '<a href="%s/Tenants/tenantmoveoutrequest/%s/">Booking Not Found' \
+                          '</a>' % (settings.HALANX_HOMES_ADMIN_URL, str(self.booking_id))
+
+                return mark_safe(url)
+
+            else:
+                return str('No Booking')
+
 
 
 class ScoutTaskAssignmentRequest(models.Model):

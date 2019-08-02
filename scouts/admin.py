@@ -108,7 +108,7 @@ class ScoutTaskReviewTagCategoryInline(admin.StackedInline):
 @admin.register(ScoutTask)
 class ScoutTaskAdmin(admin.ModelAdmin):
     list_display = ('id', 'scout', 'category', 'status', 'earning', 'visit_id', 'visit_link', 'booking_link',
-                    'house_link')
+                    'house_link', 'move_out_request_link')
     list_filter = ('scout', 'category', 'status')
     search_fields = ('scout__name', 'id')
     filter_horizontal = ('sub_tasks', 'review_tags')
