@@ -26,3 +26,10 @@ class Tenant(models.Model):
 
 class TenantPermanentAddressDetail(AddressDetail):
     tenant = models.OneToOneField('Tenant', on_delete=models.CASCADE, related_name='permanent_address')
+
+
+class TenantMoveOutRequest(models.Model):
+    tenant = models.ForeignKey(Tenant, null=True, on_delete=models.SET_NULL, related_name='moveout_requests')
+    timing = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)

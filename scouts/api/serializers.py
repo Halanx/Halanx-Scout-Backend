@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 
 from Homes.Bookings.models import Booking
@@ -12,7 +11,6 @@ from Homes.Houses.models import House, HouseVisit
 from Homes.Houses.serializers import HouseSerializer, SpaceSerializer
 from UserBase.serializers import CustomerSerializer
 from chat.api.serializers import ScoutDetailSerializer
-from chat.models import Message
 from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
     ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment, ScoutTask, \
@@ -236,6 +234,7 @@ class ScoutTaskListSerializer(serializers.ModelSerializer):
             booking = Booking.objects.using(settings.HOMES_DB).filter(id=obj.booking_id).first()
             if booking:
                 customer = booking.tenant.customer
+
         if customer:
             return CustomerSerializer(customer).data
 

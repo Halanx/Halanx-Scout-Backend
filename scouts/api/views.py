@@ -19,10 +19,10 @@ from rest_framework.response import Response
 
 from Homes.Bookings.models import Booking
 from Homes.Houses.models import HouseVisit, House
-from Homes.Tenants.models import Tenant
+from Homes.Tenants.models import Tenant, TenantMoveOutRequest
 from Homes.Tenants.serializers import TenantSerializer
 from UserBase.models import Customer
-from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING, WITHDRAWAL, DEPOSIT
+from common.utils import DATETIME_SERIALIZER_FORMAT, PAID, PENDING, WITHDRAWAL
 from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, ScoutDocumentSerializer, \
     ScheduledAvailabilitySerializer, ScoutNotificationSerializer, ChangePasswordSerializer, ScoutWalletSerializer, \
     ScoutPaymentSerializer, ScoutTaskListSerializer, ScoutTaskDetailSerializer, ScoutTaskForHouseVisitSerializer
@@ -30,7 +30,8 @@ from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvai
     ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory, ScoutTaskReviewTagCategory, \
     ScoutNotificationCategory
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
-    HOUSE_VISIT, get_appropriate_scout_for_the_house_visit_task, HOUSE_VISIT_CANCELLED, CANCELLED
+    HOUSE_VISIT, HOUSE_VISIT_CANCELLED, CANCELLED, MOVE_OUT, \
+    get_appropriate_scout_for_the_task
 from utility.logging_utils import sentry_debug_logger
 from utility.render_response_utils import SUCCESS, STATUS, DATA, ERROR
 from utility.sms_utils import send_sms
@@ -390,7 +391,6 @@ class ScoutConsumerLinkView(GenericAPIView):
     queryset = ScoutTaskAssignmentRequest.objects.all()
 
     def post(self, request):
-        print(request)
         data = request.data['data']
         if request.data[TASK_TYPE] == HOUSE_VISIT:
             # Create a task
@@ -408,14 +408,49 @@ class ScoutConsumerLinkView(GenericAPIView):
 
             # Select a scout for a particular task and create a Scout Task Assignment Request
             try:
-                scout = get_appropriate_scout_for_the_house_visit_task(task=scout_task,
-                                                                       scouts=Scout.objects.filter(active=True))
+                scout = get_appropriate_scout_for_the_task(task=scout_task,
+                                                           scouts=Scout.objects.filter(active=True))
 
                 if scout:
                     ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
                     return JsonResponse({'detail': 'done'})
                 else:
                     return JsonResponse({'detail': 'No scout found'}, status=400)
+            except Exception as E:
+                sentry_debug_logger.error('Error while creating new scout with error' + str(E), exc_info=True)
+                return JsonResponse({'detail': 'No new scout found'})
+
+        elif request.data[TASK_TYPE] == MOVE_OUT:
+            # Create a task
+            move_out_task_category = ScoutTaskCategory.objects.get(name=MOVE_OUT)
+            # fetch visit details
+            house_id = House.objects.using(settings.HOMES_DB).get(id=data['house_id']).id
+            booking_id = Booking.objects.using(settings.HOMES_DB).get(id=data['booking_id']).id
+            move_out_request = TenantMoveOutRequest.objects.get(id=data['move_out_request_id'])
+            scheduled_at = move_out_request.timing
+
+            scout_task = ScoutTask.objects.create(category=move_out_task_category,
+                                                  house_id=house_id,
+                                                  booking_id=booking_id,
+                                                  scheduled_at=scheduled_at,
+                                                  status=UNASSIGNED,
+                                                  move_out_request_id=move_out_request.id,
+                                                  earning=move_out_task_category.earning)
+
+            scout_task.sub_tasks.add(*list(move_out_task_category.sub_task_categories.all()))
+
+            # Select a scout for a particular task and create a Scout Task Assignment Request
+
+            try:
+                scout = get_appropriate_scout_for_the_task(task=scout_task,
+                                                           scouts=Scout.objects.filter(active=True))
+
+                if scout:
+                    ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
+                    return JsonResponse({'detail': 'done'})
+                else:
+                    return JsonResponse({'detail': 'No scout found'}, status=400)
+
             except Exception as E:
                 sentry_debug_logger.error('Error while creating new scout with error' + str(E), exc_info=True)
                 return JsonResponse({'detail': 'No new scout found'})
@@ -429,7 +464,6 @@ class ScoutConsumerLinkView(GenericAPIView):
 
             if scout_task:
                 scout_task.status = CANCELLED
-                # TODO Either set scout and set status cancelled or remove scout
                 scout_task.scout = None
                 scout_task.save()
 
@@ -445,6 +479,7 @@ class ScoutConsumerLinkView(GenericAPIView):
 
             else:
                 return JsonResponse({STATUS: ERROR, 'message': "No such task exists"})
+
 
 
 class HouseVisitScoutDetailView(GenericAPIView):

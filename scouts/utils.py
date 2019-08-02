@@ -5,6 +5,7 @@ from geopy import units, distance
 from pyfcm import FCMNotification
 
 from Homes.Houses.models import House, HouseVisit
+from Homes.Tenants.models import TenantMoveOutRequest
 from utility.logging_utils import sentry_debug_logger
 from utility.random_utils import generate_random_code
 
@@ -114,12 +115,21 @@ def get_sorted_scouts_nearby(house_latitude, house_longitude, distance_range=50,
     return result
 
 
-def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
+def get_appropriate_scout_for_the_task(task, scouts=None):
     from scouts.models import ScoutTaskAssignmentRequest
     from scouts.models import Scout
 
     house = House.objects.using(settings.HOMES_DB).get(id=task.house_id)
-    house_visit = HouseVisit.objects.using(settings.HOMES_DB).filter(id=task.visit_id).first()
+
+    scheduled_task_time = None
+
+    if task.type == HOUSE_VISIT:
+        house_visit = HouseVisit.objects.using(settings.HOMES_DB).filter(id=task.visit_id).first()
+        scheduled_task_time = house_visit.scheduled_visit_time
+
+    elif task.type == MOVE_OUT:
+        scheduled_task_time = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=task.move_out_request_id)\
+            .first().timing
 
     if scouts is None:
         scouts = Scout.objects.all()
@@ -129,10 +139,10 @@ def get_appropriate_scout_for_the_house_visit_task(task, scouts=None):
         values_list('scout', flat=True)
     scouts = scouts.exclude(id__in=rejected_scouts_id)
 
-    if house_visit:
+    if scheduled_task_time:
         # filter the scouts whose scheduled availabilities  lie between visit scheduled visit time
-        scouts = scouts.filter(Q(scheduled_availabilities__start_time__lte=house_visit.scheduled_visit_time) &
-                               Q(scheduled_availabilities__end_time__gte=house_visit.scheduled_visit_time) &
+        scouts = scouts.filter(Q(scheduled_availabilities__start_time__lte=scheduled_task_time) &
+                               Q(scheduled_availabilities__end_time__gte=scheduled_task_time) &
                                Q(scheduled_availabilities__cancelled=False))
 
     sentry_debug_logger.debug("queryset is " + str(scouts))

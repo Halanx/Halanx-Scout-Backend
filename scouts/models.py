@@ -26,10 +26,10 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
     get_scout_task_category_image_upload_path, ScoutTaskStatusCategories, \
     ScoutTaskAssignmentRequestStatusCategories, REQUEST_AWAITED, NEW_TASK_NOTIFICATION, REQUEST_ACCEPTED, \
-    REQUEST_REJECTED, ASSIGNED, get_appropriate_scout_for_the_house_visit_task, COMPLETE, NEW_PAYMENT_RECEIVED, \
+    REQUEST_REJECTED, ASSIGNED, COMPLETE, NEW_PAYMENT_RECEIVED, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_wallet, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account, MOVE_OUT, \
-    MOVE_OUT_AMENITY_CHECKUP, MOVE_OUT_REMARK
+    MOVE_OUT_AMENITY_CHECKUP, MOVE_OUT_REMARK, get_appropriate_scout_for_the_task
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 
@@ -282,6 +282,7 @@ class ScoutTask(models.Model):
     house_id = models.PositiveIntegerField(blank=True, null=True)
     visit_id = models.PositiveIntegerField(blank=True, null=True)
     booking_id = models.PositiveIntegerField(blank=True, null=True)
+    move_out_request_id = models.PositiveIntegerField(blank=True, null=True)
 
     scheduled_at = models.DateTimeField(blank=True, null=True)
     assigned_at = models.DateTimeField(blank=True, null=True)
@@ -587,10 +588,10 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
             # sentry_debug_logger.debug('scout rejected the request')
 
             # find another scout for the visit task excluding this scout
-            scout = get_appropriate_scout_for_the_house_visit_task(task=task,
-                                                                   scouts=Scout.objects.filter(active=True).exclude(
-                                                                       id=instance.scout.id)
-                                                                   )
+            scout = get_appropriate_scout_for_the_task(task=task,
+                                                       scouts=Scout.objects.filter(active=True).exclude(
+                                                           id=instance.scout.id)
+                                                       )
 
             if scout:
                 ScoutTaskAssignmentRequest.objects.create(task=task, scout=scout)
