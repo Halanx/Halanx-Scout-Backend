@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'channels',
+    'multiselectfield',
 
     'UserBase',
     'Homes.Houses',
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     'chat',
 
     'scouts.sub_tasks',
+
 ]
 
 MIDDLEWARE = [

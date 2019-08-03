@@ -51,7 +51,6 @@ PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK = 'Property Onboarding House Amenity 
 PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK = 'Property Onboarding House Basic Details Subtask'
 
 
-
 def get_picture_upload_path(instance, filename):
     return "scouts/{}/pictures/{}-{}".format(instance.scout.id, generate_random_code(n=5),
                                              filename.split('/')[-1])

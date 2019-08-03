@@ -21,7 +21,6 @@ from chat.utils import TYPE_SCOUT, TYPE_CUSTOMER
 from common.models import AddressDetail, BankDetail, Wallet, Document, NotificationCategory, Notification
 from common.utils import PaymentStatusCategories, PENDING, PAID, DocumentTypeCategories, WITHDRAWAL, \
     PaymentTypeCategories, DEPOSIT
-
 from scouts.tasks import send_scout_notification, scout_assignment_request_set_rejected
 from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_url, get_picture_upload_path, \
     get_thumbnail_upload_path, get_scout_document_upload_path, get_scout_document_thumbnail_upload_path, \
@@ -31,8 +30,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_description_for_completion_of_current_task_and_receiving_payment_in_wallet, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account, MOVE_OUT, \
     MOVE_OUT_AMENITY_CHECKUP, MOVE_OUT_REMARK, get_appropriate_scout_for_the_task, PROPERTY_ONBOARDING, \
-    PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, \
-    PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK
+    PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 
@@ -557,15 +555,27 @@ def manage_scout_sub_tasks_for_new_task(instance):
         MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=amenity_checkup_category).save()
         super(ScoutTask, instance).save()
 
-    # if instance.category.name == PROPERTY_ONBOARDING:
+    if instance.category.name == PROPERTY_ONBOARDING:
+        from scouts.sub_tasks.models import PropertyOnBoardingHousePhoto, PropertyOnBoardingHouseAmenity
+
+        property_onboard_house_photos_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
+            name=PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, task_category=instance.category)
+
+        PropertyOnBoardingHousePhoto(task=instance,
+                                     parent_subtask_category=property_onboard_house_photos_subtask_category).save()
+
+        property_onboard_house_amenity_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
+            name=PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, task_category=instance.category)
+
+        PropertyOnBoardingHouseAmenity(task=instance,
+                                       parent_subtask_category=property_onboard_house_amenity_subtask_category).save()
+
     #     property_onboard_house_address_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
     #         name=PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, task_category=instance.category)
     #
     #     property_onboard_house_photos_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
     #         name=PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, task_category=instance.category)
     #
-    #     property_onboard_house_amenity_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
-    #         name=PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, task_category=instance.category)
     #
     #     property_onboard_house_basic_details_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
     #         name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK, task_category=instance.category)
@@ -577,8 +587,7 @@ def manage_scout_sub_tasks_for_new_task(instance):
         #                                parent_subtask_category=property_onboard_house_address_subtask_category).save()
         # PropertyOnBoardingHousePhoto(task=instance,
         #                              parent_subtask_category=property_onboard_house_photos_subtask_category).save()
-        # PropertyOnBoardingHouseAmenity(task=instance,
-        #                                parent_subtask_category=property_onboard_house_amenity_subtask_category).save()
+
         # PropertyOnBoardingHouseBasicDetail(task=instance,
         #                                    parent_subtask_category=property_onboard_house_basic_details_subtask_category).save()
 

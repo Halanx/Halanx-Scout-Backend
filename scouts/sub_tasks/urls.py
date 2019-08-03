@@ -10,7 +10,7 @@ urlpatterns = (
 
     # PropertyOnBoarding Sub Tasks
     url(r'^property_onboard/house_address/$', views.PropertyOnBoardHouseAddressCreateView.as_view()),
-    url(r'^property_onboard/house_photos/$', views.PropertyOnBoardHousePhotosCreateView.as_view()),
-    url(r'^property_onboard/house_amenities/$', views.PropertyOnBoardHouseAmenitiesCreateView.as_view()),
+    url(r'^property_onboard/house_photos/$', views.PropertyOnBoardHousePhotosUploadView.as_view()),
+    url(r'^property_onboard/house_amenities/$', views.PropertyOnBoardHouseAmenitiesUpdateView.as_view()),
     url(r'^property_onboard/house_basic_details/$', views.PropertyOnBoardHouseBasicDetailsCreateView.as_view()),
 )
