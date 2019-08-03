@@ -2,7 +2,7 @@ from rest_framework.authentication import BasicAuthentication, TokenAuthenticati
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import UpdateAPIView, get_object_or_404, RetrieveUpdateAPIView, CreateAPIView
 
-from scouts.models import Scout, ScoutTask
+from scouts.models import Scout, ScoutTask, ScoutSubTaskCategory
 from scouts.permissions import IsScout
 from scouts.sub_tasks.api.serializers import MoveOutRemarkUpdateSerializer, MoveOutAmenitiesCheckupListSerializer, \
     MoveOutAmenitiesCheckupUpdateSerializer, PropertyOnBoardingHouseAddressCreateSerializer, \
@@ -10,7 +10,8 @@ from scouts.sub_tasks.api.serializers import MoveOutRemarkUpdateSerializer, Move
     PropertyOnBoardHousePhotosUploadSerializer, PropertyOnBoardHouseAmenitiesUpdateSerializer
 from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup, PropertyOnBoardingHousePhoto, \
     PropertyOnBoardingHouseAmenity
-from scouts.utils import ASSIGNED, MOVE_OUT, PROPERTY_ONBOARDING
+from scouts.utils import ASSIGNED, MOVE_OUT, PROPERTY_ONBOARDING, PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, \
+    PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK
 from utility.render_response_utils import ERROR, STATUS
 
 
@@ -60,7 +61,8 @@ class PropertyOnBoardHouseAddressCreateView(CreateAPIView):
         return super(PropertyOnBoardHouseAddressCreateView, self).create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(task=self.scout_task)
+        serializer.save(task=self.scout_task, parent_subtask_category=ScoutSubTaskCategory.objects.get_or_create(
+            name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK, task_category=self.scout_task.category)[0])
 
 
 class PropertyOnBoardHouseBasicDetailsCreateView(CreateAPIView):
@@ -79,7 +81,8 @@ class PropertyOnBoardHouseBasicDetailsCreateView(CreateAPIView):
         return super(PropertyOnBoardHouseBasicDetailsCreateView, self).create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(task=self.scout_task)
+        serializer.save(task=self.scout_task, parent_subtask_category=ScoutSubTaskCategory.objects.get_or_create(
+            name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS, task_category=self.scout_task.category)[0])
 
 
 class PropertyOnBoardHousePhotosUploadView(CreateAPIView):
