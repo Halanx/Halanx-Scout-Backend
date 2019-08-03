@@ -558,13 +558,13 @@ def manage_scout_sub_tasks_for_new_task(instance):
     if instance.category.name == PROPERTY_ONBOARDING:
         from scouts.sub_tasks.models import PropertyOnBoardingHousePhoto, PropertyOnBoardingHouseAmenity
 
-        property_onboard_house_photos_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
+        property_onboard_house_photos_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
             name=PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, task_category=instance.category)
 
         PropertyOnBoardingHousePhoto(task=instance,
                                      parent_subtask_category=property_onboard_house_photos_subtask_category).save()
 
-        property_onboard_house_amenity_subtask_category = ScoutSubTaskCategory.objects.get_or_create(
+        property_onboard_house_amenity_subtask_category, _ = ScoutSubTaskCategory.objects.get_or_create(
             name=PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, task_category=instance.category)
 
         PropertyOnBoardingHouseAmenity(task=instance,
