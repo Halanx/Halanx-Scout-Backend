@@ -488,17 +488,31 @@ class ScoutConsumerLinkAndScoutTaskCreateView(GenericAPIView):
             from scouts.sub_tasks.models import PropertyOnBoardingDetail
             property_onboarding_details = PropertyOnBoardingDetail.objects.create(
                 name=data['name'], phone_no=data['phone_no'], location=data.get('location'),
-                latitude=data['latitude'], longitude=data['longitude'])
+                latitude=data['latitude'], longitude=data['longitude'], scheduled_time=data['scheduled_time'])
 
-            scheduled_at = move_out_request.timing
+            scheduled_at = property_onboarding_details.scheduled_at
 
             scout_task = ScoutTask.objects.create(category=property_on_board_task_category,
                                                   scheduled_at=scheduled_at,
                                                   status=UNASSIGNED,
                                                   earning=property_on_board_task_category.earning,
-                                                  onboarding_property_details_id=property_onboarding_details)
+                                                  onboarding_property_details_id=property_onboarding_details.id)
 
             scout_task.sub_tasks.add(*list(property_on_board_task_category.sub_task_categories.all()))
+
+            # Select a scout for a particular task and create a Scout Task Assignment Request
+            try:
+                scout = get_appropriate_scout_for_the_task(task=scout_task,
+                                                           scouts=Scout.objects.filter(active=True))
+
+                if scout:
+                    ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
+                    return JsonResponse({'detail': 'done'})
+                else:
+                    return JsonResponse({'detail': 'No scout found'}, status=400)
+            except Exception as E:
+                sentry_debug_logger.error('Error while creating new scout with error' + str(E), exc_info=True)
+                return JsonResponse({'detail': 'No new scout found'})
 
 
 class HouseVisitScoutDetailView(GenericAPIView):
