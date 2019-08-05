@@ -146,7 +146,7 @@ def get_appropriate_scout_for_the_task(task, scouts=None):
         from scouts.sub_tasks.models import PropertyOnBoardingDetail
         property_on_boarding_detail = PropertyOnBoardingDetail.objects.filter(id=task.onboarding_property_details_id)\
             .first()
-        scheduled_task_time = property_on_boarding_detail.timing
+        scheduled_task_time = property_on_boarding_detail.scheduled_at
         house_latitude = property_on_boarding_detail.latitude
         house_longitude = property_on_boarding_detail.longitude
 
