@@ -6,6 +6,7 @@ from pyfcm import FCMNotification
 
 from Homes.Houses.models import House, HouseVisit
 from Homes.Tenants.models import TenantMoveOutRequest
+from scouts.sub_tasks.models import PropertyOnBoardingDetail
 from utility.logging_utils import sentry_debug_logger
 from utility.random_utils import generate_random_code
 
@@ -125,17 +126,31 @@ def get_appropriate_scout_for_the_task(task, scouts=None):
     from scouts.models import ScoutTaskAssignmentRequest
     from scouts.models import Scout
 
-    house = House.objects.using(settings.HOMES_DB).get(id=task.house_id)
+    house = House.objects.using(settings.HOMES_DB).filter(id=task.house_id).first()
 
     scheduled_task_time = None
 
     if task.category.name == HOUSE_VISIT:
         house_visit = HouseVisit.objects.using(settings.HOMES_DB).filter(id=task.visit_id).first()
         scheduled_task_time = house_visit.scheduled_visit_time
+        house_latitude = house.address.latitude
+        house_longitude = house.address.longitude
 
     elif task.category.name == MOVE_OUT:
         scheduled_task_time = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=task.move_out_request_id) \
             .first().timing
+        house_latitude = house.address.latitude
+        house_longitude = house.address.longitude
+
+    elif task.category.name == PROPERTY_ONBOARDING:
+        property_on_boarding_detail = PropertyOnBoardingDetail.objects.filter(id=task.onboarding_property_details_id)\
+            .first()
+        scheduled_task_time = property_on_boarding_detail.timing
+        house_latitude = property_on_boarding_detail.latitude
+        house_longitude = property_on_boarding_detail.longitude
+
+    else:
+        raise Exception({'detail': 'Task category is not in the choices available'})
 
     if scouts is None:
         scouts = Scout.objects.all()
@@ -153,8 +168,8 @@ def get_appropriate_scout_for_the_task(task, scouts=None):
 
     sentry_debug_logger.debug("queryset is " + str(scouts))
 
-    sorted_scouts = get_sorted_scouts_nearby(house_latitude=house.address.latitude,
-                                             house_longitude=house.address.longitude,
+    sorted_scouts = get_sorted_scouts_nearby(house_latitude=house_latitude,
+                                             house_longitude=house_longitude,
                                              distance_range=50, queryset=scouts)
 
     try:
