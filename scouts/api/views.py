@@ -487,12 +487,12 @@ class ScoutConsumerLinkAndScoutTaskCreateView(GenericAPIView):
             from scouts.sub_tasks.models import PropertyOnBoardingDetail
             try:
                 property_onboarding_details_serializer = PropertyOnboardingDetailSerializer(data=data)
-                if property_onboarding_details_serializer.is_valid(raise_exception=True):
-                    property_onboarding_details = property_onboarding_details_serializer.save()
+                property_onboarding_details_serializer.is_valid(raise_exception=True)
+                property_onboarding_details = property_onboarding_details_serializer.save()
                     # property_onboarding_details = PropertyOnBoardingDetail.objects.create(
                     #     name=data['name'], phone_no=data['phone_no'], location=data.get('location'),
                     #     latitude=data['latitude'], longitude=data['longitude'], scheduled_time=data['scheduled_time'])
-                    scheduled_at = property_onboarding_details.scheduled_at
+                scheduled_at = property_onboarding_details.scheduled_at
             except Exception as E:
                 raise ValidationError({STATUS: ERROR, 'detail': str(E)})
 
