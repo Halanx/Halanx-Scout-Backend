@@ -39,7 +39,7 @@ class PropertyOnBoardingDetail(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     phone_no = models.CharField(max_length=100)  # Owner phone no
-    scheduled_time = models.DateTimeField()
+    scheduled_at = models.DateTimeField()
 
 
 class PropertyOnBoardingSubTask(models.Model):
