@@ -36,8 +36,8 @@ class MoveOutRemark(MoveOutSubTask):  # SubTask 2
 class PropertyOnBoardingDetail(models.Model):
     name = models.CharField(max_length=100)  # Owner name
     location = models.CharField(max_length=100, null=True, blank=True)
-    latitude = models.IntegerField()
-    longitude = models.IntegerField()
+    latitude = models.FloatField()
+    longitude = models.FloatField()
     phone_no = models.CharField(max_length=100)  # Owner phone no
     scheduled_time = models.DateTimeField()
 
