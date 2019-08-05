@@ -3,7 +3,7 @@ from django.contrib import admin
 # Register your models here.
 from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup, PropertyOnBoardingHouseAddress, \
     PropertyOnBoardingHouseAmenity, PropertyOnBoardingHouseBasicDetail, PropertyOnBoardingHousePhoto, \
-    PropertyOnBoardingPhoto
+    PropertyOnBoardingPhoto, PropertyOnBoardingDetail
 from utility.admin_site_utils import custom_titled_filter
 
 
@@ -60,3 +60,8 @@ class PropertyOnBoardingHousePhotoAdmin(admin.ModelAdmin):
 class PropertyOnBoardingHouseBasicDetailInline(admin.ModelAdmin):
     list_display = ('task', 'furnish_type', 'space_type', 'rent')
     list_filter = ('furnish_type', 'space_type')
+
+
+@admin.register(PropertyOnBoardingDetail)
+class PropertyOnBoardingDetailsAdmin(admin.ModelAdmin):
+    list_display = ('name', 'phone_no', 'latitude', 'longitude', 'scheduled_at', 'location')
