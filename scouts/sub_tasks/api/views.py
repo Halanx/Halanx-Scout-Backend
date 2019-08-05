@@ -62,7 +62,7 @@ class PropertyOnBoardHouseAddressCreateView(CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(task=self.scout_task, parent_subtask_category=ScoutSubTaskCategory.objects.get_or_create(
-            name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK, task_category=self.scout_task.category)[0])
+            name=PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, task_category=self.scout_task.category)[0])
 
 
 class PropertyOnBoardHouseBasicDetailsCreateView(CreateAPIView):
@@ -82,7 +82,7 @@ class PropertyOnBoardHouseBasicDetailsCreateView(CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(task=self.scout_task, parent_subtask_category=ScoutSubTaskCategory.objects.get_or_create(
-            name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS, task_category=self.scout_task.category)[0])
+            name=PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK, task_category=self.scout_task.category)[0])
 
 
 class PropertyOnBoardHousePhotosUploadView(CreateAPIView):
