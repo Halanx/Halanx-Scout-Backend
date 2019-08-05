@@ -244,9 +244,13 @@ class ScoutTaskListSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_custom_data(obj):
         if obj.category.name == PROPERTY_ONBOARDING:
-            return PropertyOnboardingDetailSerializer(obj).data
-        else:
-            return None
+            from scouts.sub_tasks.models import PropertyOnBoardingDetail
+            prop_on_board_detail = PropertyOnBoardingDetail.objects.filter(
+                id=obj.onboarding_property_details_id).first()
+            if prop_on_board_detail:
+                return PropertyOnboardingDetailSerializer(prop_on_board_detail).data
+
+        return None
 
 
 class ScoutTaskDetailSerializer(ScoutTaskListSerializer):
