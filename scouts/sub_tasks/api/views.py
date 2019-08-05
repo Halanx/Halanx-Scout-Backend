@@ -1,6 +1,9 @@
+from django.db import IntegrityError
+from rest_framework import status
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import UpdateAPIView, get_object_or_404, RetrieveUpdateAPIView, CreateAPIView
+from rest_framework.response import Response
 
 from scouts.models import Scout, ScoutTask, ScoutSubTaskCategory
 from scouts.permissions import IsScout
@@ -58,7 +61,11 @@ class PropertyOnBoardHouseAddressCreateView(CreateAPIView):
         scout = get_object_or_404(Scout, user=self.request.user)
         self.scout_task = get_object_or_404(ScoutTask, id=self.kwargs.get('task_id'), scout=scout, status=ASSIGNED,
                                             category__name=PROPERTY_ONBOARDING)
-        return super(PropertyOnBoardHouseAddressCreateView, self).create(request, *args, **kwargs)
+        try:
+            return super(PropertyOnBoardHouseAddressCreateView, self).create(request, *args, **kwargs)
+        except IntegrityError:
+            return Response({STATUS: ERROR, 'message': 'This task is already completed'},
+                            status=status.HTTP_409_CONFLICT)
 
     def perform_create(self, serializer):
         serializer.save(task=self.scout_task, parent_subtask_category=ScoutSubTaskCategory.objects.get_or_create(
@@ -78,7 +85,12 @@ class PropertyOnBoardHouseBasicDetailsCreateView(CreateAPIView):
         scout = get_object_or_404(Scout, user=self.request.user)
         self.scout_task = get_object_or_404(ScoutTask, id=self.kwargs.get('task_id'), scout=scout, status=ASSIGNED,
                                             category__name=PROPERTY_ONBOARDING)
-        return super(PropertyOnBoardHouseBasicDetailsCreateView, self).create(request, *args, **kwargs)
+
+        try:
+            return super(PropertyOnBoardHouseBasicDetailsCreateView, self).create(request, *args, **kwargs)
+        except IntegrityError:
+            return Response({STATUS: ERROR, 'message': 'This task is already completed'},
+                            status=status.HTTP_409_CONFLICT)
 
     def perform_create(self, serializer):
         serializer.save(task=self.scout_task, parent_subtask_category=ScoutSubTaskCategory.objects.get_or_create(
@@ -125,4 +137,3 @@ class PropertyOnBoardHouseAmenitiesUpdateView(UpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save(data=self.request.data['data'])
-
