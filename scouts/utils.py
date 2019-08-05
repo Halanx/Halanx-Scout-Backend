@@ -6,7 +6,7 @@ from pyfcm import FCMNotification
 
 from Homes.Houses.models import House, HouseVisit
 from Homes.Tenants.models import TenantMoveOutRequest
-from scouts.sub_tasks.models import PropertyOnBoardingDetail
+
 from utility.logging_utils import sentry_debug_logger
 from utility.random_utils import generate_random_code
 
@@ -143,6 +143,7 @@ def get_appropriate_scout_for_the_task(task, scouts=None):
         house_longitude = house.address.longitude
 
     elif task.category.name == PROPERTY_ONBOARDING:
+        from scouts.sub_tasks.models import PropertyOnBoardingDetail
         property_on_boarding_detail = PropertyOnBoardingDetail.objects.filter(id=task.onboarding_property_details_id)\
             .first()
         scheduled_task_time = property_on_boarding_detail.timing
