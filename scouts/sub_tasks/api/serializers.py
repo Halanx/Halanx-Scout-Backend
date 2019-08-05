@@ -120,7 +120,7 @@ class PropertyOnBoardHouseAmenitiesUpdateSerializer(serializers.ModelSerializer)
 class PropertyOnboardingDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyOnBoardingDetail
-        fields = ('name', 'phone_no', 'location', 'latitude', 'longitude')
+        fields = ('name', 'phone_no', 'location', 'latitude', 'longitude', 'scheduled_time')
 
 
 class PropertyOnBoardHouseBasicDetailsCreateSerializer(serializers.ModelSerializer):

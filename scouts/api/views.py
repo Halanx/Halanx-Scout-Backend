@@ -484,11 +484,14 @@ class ScoutConsumerLinkAndScoutTaskCreateView(GenericAPIView):
         elif request.data[TASK_TYPE] == PROPERTY_ONBOARDING:
             # Create a task
             property_on_board_task_category = ScoutTaskCategory.objects.get(name=PROPERTY_ONBOARDING)
-            data = request.data['data']
             from scouts.sub_tasks.models import PropertyOnBoardingDetail
-            property_onboarding_details = PropertyOnBoardingDetail.objects.create(
-                name=data['name'], phone_no=data['phone_no'], location=data.get('location'),
-                latitude=data['latitude'], longitude=data['longitude'], scheduled_time=data['scheduled_time'])
+            try:
+                property_onboarding_details = PropertyOnboardingDetailSerializer(data=data).save()
+                # property_onboarding_details = PropertyOnBoardingDetail.objects.create(
+                #     name=data['name'], phone_no=data['phone_no'], location=data.get('location'),
+                #     latitude=data['latitude'], longitude=data['longitude'], scheduled_time=data['scheduled_time'])
+            except Exception as E:
+                raise ValidationError({STATUS: ERROR, 'detail': str(E)})
 
             scheduled_at = property_onboarding_details.scheduled_at
 
