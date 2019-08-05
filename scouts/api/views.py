@@ -486,7 +486,7 @@ class ScoutConsumerLinkAndScoutTaskCreateView(GenericAPIView):
             property_on_board_task_category = ScoutTaskCategory.objects.get(name=PROPERTY_ONBOARDING)
             data = request.data['data']
             from scouts.sub_tasks.models import PropertyOnBoardingDetail
-            PropertyOnBoardingDetail.objects.create(
+            property_onboarding_details = PropertyOnBoardingDetail.objects.create(
                 name=data['name'], phone_no=data['phone_no'], location=data.get('location'),
                 latitude=data['latitude'], longitude=data['longitude'])
 
@@ -495,7 +495,8 @@ class ScoutConsumerLinkAndScoutTaskCreateView(GenericAPIView):
             scout_task = ScoutTask.objects.create(category=property_on_board_task_category,
                                                   scheduled_at=scheduled_at,
                                                   status=UNASSIGNED,
-                                                  earning=property_on_board_task_category.earning)
+                                                  earning=property_on_board_task_category.earning,
+                                                  onboarding_property_details_id=property_onboarding_details)
 
             scout_task.sub_tasks.add(*list(property_on_board_task_category.sub_task_categories.all()))
 
