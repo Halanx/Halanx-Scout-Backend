@@ -29,9 +29,10 @@ from scouts.api.serializers import ScoutSerializer, ScoutPictureSerializer, Scou
 from scouts.models import OTP, Scout, ScoutPicture, ScoutDocument, ScheduledAvailability, ScoutNotification, \
     ScoutWallet, ScoutPayment, ScoutTask, ScoutTaskAssignmentRequest, ScoutTaskCategory, ScoutTaskReviewTagCategory, \
     ScoutNotificationCategory
+from scouts.sub_tasks.api.serializers import PropertyOnboardingDetailSerializer
 from scouts.utils import ASSIGNED, COMPLETE, UNASSIGNED, REQUEST_REJECTED, REQUEST_AWAITED, REQUEST_ACCEPTED, TASK_TYPE, \
     HOUSE_VISIT, HOUSE_VISIT_CANCELLED, CANCELLED, MOVE_OUT, \
-    get_appropriate_scout_for_the_task
+    get_appropriate_scout_for_the_task, PROPERTY_ONBOARDING
 from utility.logging_utils import sentry_debug_logger
 from utility.render_response_utils import SUCCESS, STATUS, DATA, ERROR
 from utility.sms_utils import send_sms
@@ -385,8 +386,8 @@ class TenantRetrieveView(RetrieveAPIView):
         return get_object_or_404(Tenant.objects.using(settings.HOMES_DB), customer__user=self.request.user)
 
 
-class ScoutConsumerLinkView(GenericAPIView):
-    authentication_classes = [BasicAuthentication, ]
+class ScoutConsumerLinkAndScoutTaskCreateView(GenericAPIView):
+    authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAdminUser, ]
     queryset = ScoutTaskAssignmentRequest.objects.all()
 
@@ -479,6 +480,24 @@ class ScoutConsumerLinkView(GenericAPIView):
 
             else:
                 return JsonResponse({STATUS: ERROR, 'message': "No such task exists"})
+
+        elif request.data[TASK_TYPE] == PROPERTY_ONBOARDING:
+            # Create a task
+            property_on_board_task_category = ScoutTaskCategory.objects.get(name=PROPERTY_ONBOARDING)
+            data = request.data['data']
+            from scouts.sub_tasks.models import PropertyOnBoardingDetail
+            PropertyOnBoardingDetail.objects.create(
+                name=data['name'], phone_no=data['phone_no'], location=data.get('location'),
+                latitude=data['latitude'], longitude=data['longitude'])
+
+            scheduled_at = move_out_request.timing
+
+            scout_task = ScoutTask.objects.create(category=property_on_board_task_category,
+                                                  scheduled_at=scheduled_at,
+                                                  status=UNASSIGNED,
+                                                  earning=property_on_board_task_category.earning)
+
+            scout_task.sub_tasks.add(*list(property_on_board_task_category.sub_task_categories.all()))
 
 
 class HouseVisitScoutDetailView(GenericAPIView):

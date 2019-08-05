@@ -12,7 +12,7 @@ from Homes.Houses.utils import HouseAccomodationTypeCategories
 from scouts.sub_tasks.api.validators import validate_amenity_id
 from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup, PropertyOnBoardingHouseAddress, \
     PropertyOnBoardingHouseBasicDetail, PropertyOnBoardingHouseAmenity, PropertyOnBoardingHousePhoto, \
-    PropertyOnBoardingPhoto
+    PropertyOnBoardingPhoto, PropertyOnBoardingDetail
 from scouts.sub_tasks.utils import OK, DAMAGED, MISSING
 from utility.logging_utils import sentry_debug_logger
 from utility.serializers import JSONSerializerField
@@ -115,6 +115,12 @@ class PropertyOnBoardHouseAmenitiesUpdateSerializer(serializers.ModelSerializer)
             raise ValidationError({'detail': 'Bad Request'}, code=400)
 
         return super(PropertyOnBoardHouseAmenitiesUpdateSerializer, self).update(instance, validated_data)
+
+
+class PropertyOnboardingDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PropertyOnBoardingDetail
+        fields = ('name', 'phone_no', 'location', 'latitude', 'longitude')
 
 
 class PropertyOnBoardHouseBasicDetailsCreateSerializer(serializers.ModelSerializer):

@@ -15,6 +15,8 @@ from common.utils import DATETIME_SERIALIZER_FORMAT
 from scouts.models import Scout, ScoutDocument, ScoutPermanentAddress, ScoutWorkAddress, ScoutBankDetail, ScoutPicture, \
     ScheduledAvailability, ScoutNotification, ScoutNotificationCategory, ScoutWallet, ScoutPayment, ScoutTask, \
     ScoutTaskCategory, ScoutSubTaskCategory, ScoutTaskReviewTagCategory
+from scouts.sub_tasks.api.serializers import PropertyOnboardingDetailSerializer
+from scouts.utils import PROPERTY_ONBOARDING
 from utility.serializers import DateTimeFieldTZ
 
 
@@ -199,6 +201,7 @@ class ScoutTaskListSerializer(serializers.ModelSerializer):
     space = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
     scout_data = serializers.SerializerMethodField()
+    custom_data = serializers.SerializerMethodField()  # variable json depending on task type
 
     class Meta:
         model = ScoutTask
@@ -237,6 +240,13 @@ class ScoutTaskListSerializer(serializers.ModelSerializer):
 
         if customer:
             return CustomerSerializer(customer).data
+
+    @staticmethod
+    def get_custom_data(obj):
+        if obj.category.name == PROPERTY_ONBOARDING:
+            return PropertyOnboardingDetailSerializer(obj).data
+        else:
+            return None
 
 
 class ScoutTaskDetailSerializer(ScoutTaskListSerializer):

@@ -284,6 +284,7 @@ class ScoutTask(models.Model):
     visit_id = models.PositiveIntegerField(blank=True, null=True)
     booking_id = models.PositiveIntegerField(blank=True, null=True)
     move_out_request_id = models.PositiveIntegerField(blank=True, null=True)
+    onboarding_property_details_id = models.PositiveIntegerField(null=True, blank=True)
 
     scheduled_at = models.DateTimeField(blank=True, null=True)
     assigned_at = models.DateTimeField(blank=True, null=True)
@@ -408,6 +409,8 @@ class ScoutTask(models.Model):
 
         except Exception as E:
             return str(E)
+
+    move_out_request_link.short_description = 'MoveOut Request Link'
 
 
 class ScoutTaskAssignmentRequest(models.Model):

@@ -22,6 +22,7 @@ urlpatterns = (
     url(r'^payments/$', views.ScoutPaymentListView.as_view()),
 
     url(r'^tasks/$', views.ScoutTaskListView.as_view()),
+
     url(r'^tasks/(?P<pk>\d+)/$', views.ScoutTaskRetrieveUpdateDestroyAPIView.as_view()),
     url(r'^tasks/(?P<pk>\d+)/request/$', views.ScoutTaskAssignmentRequestUpdateAPIView.as_view()),
 
@@ -36,6 +37,6 @@ urlpatterns = (
     url('^task/rate/', views.rate_scout),
 
     # Url to make connection between halanx-scout and consumer app
-    url('^task/create/', views.ScoutConsumerLinkView.as_view()),
+    url('^task/create/', views.ScoutConsumerLinkAndScoutTaskCreateView.as_view()),
 
 )

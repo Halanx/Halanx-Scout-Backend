@@ -33,6 +33,14 @@ class MoveOutRemark(MoveOutSubTask):  # SubTask 2
 
 # PROPERTY ON-BOARDING SUB TASKS
 
+class PropertyOnBoardingDetail(models.Model):
+    name = models.CharField(max_length=100)  # Owner name
+    location = models.CharField(max_length=100, null=True, blank=True)
+    latitude = models.IntegerField(null=True, blank=True)
+    longitude = models.IntegerField(null=True, blank=True)
+    phone_no = models.CharField(max_length=100)  # Owner phone no
+
+
 class PropertyOnBoardingSubTask(models.Model):
     parent_task_category = models.ForeignKey(ScoutTaskCategory, on_delete=models.SET_NULL, to_field='name',
                                              default=PROPERTY_ONBOARDING, null=True)
@@ -73,4 +81,5 @@ class PropertyOnBoardingHouseBasicDetail(PropertyOnBoardingSubTask):  # SubTask 
 
     furnish_type = models.CharField(choices=HouseFurnishTypeCategories, max_length=30)
     space_type = MultiSelectField(max_length=25, max_choices=3, choices=HouseAccomodationTypeCategories)
-    rent = models.FloatField()
+    rent = models.FloatField(null=True, blank=True)
+    bhk_count = models.IntegerField(default=0)
