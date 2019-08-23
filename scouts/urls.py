@@ -27,7 +27,7 @@ urlpatterns = (
     url(r'^tasks/(?P<pk>\d+)/request/$', views.ScoutTaskAssignmentRequestUpdateAPIView.as_view()),
 
     # sub_tasks sub app
-    url(r'^tasks/(?P<task_id>\d+)/subtask/', include('scouts.sub_tasks.urls')),
+    url(r'^tasks/(?P<task_id>\d+|)/subtask/', include('scouts.sub_tasks.urls')),
 
 
     url(r'^tenant/$', views.TenantRetrieveView.as_view()),

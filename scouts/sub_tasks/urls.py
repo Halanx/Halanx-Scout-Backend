@@ -13,5 +13,5 @@ urlpatterns = (
     url(r'^property_onboard/house_photos/$', views.PropertyOnBoardHousePhotosUploadView.as_view()),
     url(r'^property_onboard/house_amenities/$', views.PropertyOnBoardHouseAmenitiesUpdateView.as_view()),
     url(r'^property_onboard/house_basic_details/$', views.PropertyOnBoardHouseBasicDetailsCreateView.as_view()),
-    url(r'property_onboard/self_task/$', views.create_property_on_boarding_scout_task_by_scout_himself),
+    url(r'^property_onboard/self_task/$', views.create_property_on_boarding_scout_task_by_scout_himself),
 )
