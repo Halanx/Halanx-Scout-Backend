@@ -146,9 +146,9 @@ class PropertyOnBoardHouseAmenitiesUpdateView(UpdateAPIView):
         serializer.save(data=self.request.data['data'])
 
 
-@api_view(['POST', "GET"])
-# @authentication_classes((BasicAuthentication, TokenAuthentication))
-# @permission_classes((IsScout,))
+@api_view(['POST', ])
+@authentication_classes((BasicAuthentication, TokenAuthentication))
+@permission_classes((IsScout,))
 def create_property_on_boarding_scout_task_by_scout_himself(request, task_id=''):
     scout = get_object_or_404(Scout, user=request.user)
     data = {'location': request.data.get('location', ""),
