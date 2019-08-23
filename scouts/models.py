@@ -422,6 +422,7 @@ class ScoutTaskAssignmentRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     responded_at = models.DateTimeField(blank=True, null=True)
+    pass_to_another_scout = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.id)
@@ -620,7 +621,7 @@ def scout_task_assignment_request_pre_save_hook(sender, instance, update_fields=
             task.assigned_at = instance.responded_at
             task.save()
 
-        elif instance.status == REQUEST_REJECTED:
+        elif instance.status == REQUEST_REJECTED and instance.pass_to_another_scout:
             # find some other scout to send notification to
             # create another scout task assignment request
             # sentry_debug_logger.debug('scout rejected the request')

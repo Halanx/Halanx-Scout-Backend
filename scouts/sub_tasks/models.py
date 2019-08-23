@@ -34,12 +34,12 @@ class MoveOutRemark(MoveOutSubTask):  # SubTask 2
 # PROPERTY ON-BOARDING SUB TASKS
 
 class PropertyOnBoardingDetail(models.Model):
-    name = models.CharField(max_length=100)  # Owner name
+    name = models.CharField(max_length=100, null=True, blank=True)  # Owner name
     location = models.CharField(max_length=100, null=True, blank=True)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    phone_no = models.CharField(max_length=100)  # Owner phone no
-    scheduled_at = models.DateTimeField()
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    phone_no = models.CharField(max_length=100, null=True, blank=True)  # Owner phone no
+    scheduled_at = models.DateTimeField(null=True, blank=True)
 
 
 class PropertyOnBoardingSubTask(models.Model):

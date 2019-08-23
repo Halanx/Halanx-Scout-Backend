@@ -499,11 +499,20 @@ class ScoutConsumerLinkAndScoutTaskCreateView(GenericAPIView):
 
             # Select a scout for a particular task and create a Scout Task Assignment Request
             try:
-                scout = get_appropriate_scout_for_the_task(task=scout_task,
-                                                           scouts=Scout.objects.filter(active=True))
+                # If we send this parameter then this scout with the provided id will be chosen
+                manually_chosen_scout_id = data.get("manually_chosen_scout_id", None)
+                if manually_chosen_scout_id:
+                    scout = Scout.objects.filter(id=manually_chosen_scout_id).first()
+                    # don't divert call if rejected because this task is created by scout itself
+                    pass_to_another_scout = False
+                else:
+                    scout = get_appropriate_scout_for_the_task(task=scout_task,
+                                                               scouts=Scout.objects.filter(active=True))
+                    pass_to_another_scout = True
 
                 if scout:
-                    ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout)
+                    ScoutTaskAssignmentRequest.objects.create(task=scout_task, scout=scout,
+                                                              pass_to_another_scout=pass_to_another_scout)
                     return JsonResponse({'detail': 'done'})
                 else:
                     return JsonResponse({'detail': 'No scout found'}, status=400)

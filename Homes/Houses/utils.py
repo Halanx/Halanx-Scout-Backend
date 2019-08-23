@@ -121,3 +121,7 @@ def generate_accomodation_allowed_str(accomodation_allowed):
         return "{} and {}".format(*map(lambda x: x.capitalize(), accomodation_allowed))
     elif len(accomodation_allowed) == 1:
         return accomodation_allowed[0].capitalize()
+
+
+SCOUT_BACKEND_URL = "https://scout-api.halanx.com"
+SCOUT_TASK_URL = SCOUT_BACKEND_URL + "/scouts/task/create/"

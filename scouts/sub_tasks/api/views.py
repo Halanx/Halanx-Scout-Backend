@@ -1,10 +1,16 @@
+import json
+
+import requests
+from decouple import config
 from django.db import IntegrityError
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import UpdateAPIView, get_object_or_404, RetrieveUpdateAPIView, CreateAPIView
 from rest_framework.response import Response
 
+from Homes.Houses.utils import SCOUT_TASK_URL
 from scouts.models import Scout, ScoutTask, ScoutSubTaskCategory
 from scouts.permissions import IsScout
 from scouts.sub_tasks.api.serializers import MoveOutRemarkUpdateSerializer, MoveOutAmenitiesCheckupListSerializer, \
@@ -14,8 +20,9 @@ from scouts.sub_tasks.api.serializers import MoveOutRemarkUpdateSerializer, Move
 from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup, PropertyOnBoardingHousePhoto, \
     PropertyOnBoardingHouseAmenity
 from scouts.utils import ASSIGNED, MOVE_OUT, PROPERTY_ONBOARDING, PROPERTY_ONBOARDING_HOUSE_ADDRESS_SUBTASK, \
-    PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK
-from utility.render_response_utils import ERROR, STATUS
+    PROPERTY_ONBOARDING_HOUSE_BASIC_DETAILS_SUBTASK, TASK_TYPE
+from utility.logging_utils import sentry_debug_logger
+from utility.render_response_utils import ERROR, STATUS, DATA, SUCCESS
 
 
 class MoveOutRemarkUpdateView(UpdateAPIView):
@@ -137,3 +144,29 @@ class PropertyOnBoardHouseAmenitiesUpdateView(UpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save(data=self.request.data['data'])
+
+
+@api_view(['POST'])
+@authentication_classes((BasicAuthentication, TokenAuthentication))
+@permission_classes((IsScout,))
+def create_property_on_boarding_scout_task_by_scout_himself(request):
+    scout = get_object_or_404(Scout, user=request.user)
+    data = {'location': request.data.get('location', ""),
+            'scheduled_at': request.data.get('scheduled_at', None),
+            'manually_chosen_scout_id': scout.id}
+
+    request_data = {
+        DATA: data,
+        TASK_TYPE: 'Property Onboarding'
+    }
+    x = requests.post(SCOUT_TASK_URL, data=json.dumps(request_data),
+                      headers={'Content-type': 'application/json'},
+                      timeout=10,
+                      auth=(config('SCOUT_BACKEND_ADMIN_USERNAME'), config('SCOUT_BACKEND_ADMIN_PASSWORD')))
+
+    if 200 <= x.status_code < 300:
+        return Response({STATUS: SUCCESS})
+
+    else:
+        sentry_debug_logger.error(str(x.status_code) + str(x.content))
+        return Response({STATUS: ERROR, 'message': 'An Error Occured'})
