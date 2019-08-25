@@ -19,3 +19,23 @@ BookingStatusCategories = (
     (BOOKING_PARTIAL, 'Partially complete'),
     (BOOKING_COMPLETE, 'Complete'),
 )
+
+SUB_UNIT_ITEM = 'sub_unit'
+COMMON_AREA_ITEM = 'common_area'
+
+FacilityItemTypeCategories = (
+    (SUB_UNIT_ITEM, 'Sub Unit'),
+    (COMMON_AREA_ITEM, 'Common Area')
+)
+
+FACILITY_ALLOCATED = 'Allocated'
+FACILITY_RETURNED = 'Returned'
+FACILITY_LOST = 'Lost'
+FACILITY_DAMAGED = 'Damaged'
+
+BookingFacilityStatusChoices = (
+    (FACILITY_ALLOCATED, FACILITY_ALLOCATED),
+    (FACILITY_RETURNED, FACILITY_RETURNED),
+    (FACILITY_LOST, FACILITY_LOST),
+    (FACILITY_DAMAGED, FACILITY_DAMAGED),
+)

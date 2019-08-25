@@ -30,7 +30,8 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_description_for_completion_of_current_task_and_receiving_payment_in_wallet, \
     get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account, MOVE_OUT, \
     MOVE_OUT_AMENITY_CHECKUP, MOVE_OUT_REMARK, get_appropriate_scout_for_the_task, PROPERTY_ONBOARDING, \
-    PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK
+    PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, \
+    get_amenities_json_from_move_out_request_id
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 
@@ -555,7 +556,8 @@ def manage_scout_sub_tasks_for_new_task(instance):
                                                                                  task_category=instance.category)
 
         from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup
-        MoveOutRemark(task=instance, parent_subtask_category=remark_subtask_category).save()
+        amenities_json = get_amenities_json_from_move_out_request_id(instance.move_out_request_id)
+        MoveOutRemark(task=instance, parent_subtask_category=remark_subtask_category,amenities_json=amenities_json).save()
         MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=amenity_checkup_category).save()
         super(ScoutTask, instance).save()
 

@@ -144,7 +144,7 @@ def get_appropriate_scout_for_the_task(task, scouts=None):
 
     elif task.category.name == PROPERTY_ONBOARDING:
         from scouts.sub_tasks.models import PropertyOnBoardingDetail
-        property_on_boarding_detail = PropertyOnBoardingDetail.objects.filter(id=task.onboarding_property_details_id)\
+        property_on_boarding_detail = PropertyOnBoardingDetail.objects.filter(id=task.onboarding_property_details_id) \
             .first()
         scheduled_task_time = property_on_boarding_detail.scheduled_at
         house_latitude = property_on_boarding_detail.latitude
@@ -201,3 +201,26 @@ def get_description_for_completion_of_current_task_and_receiving_payment_in_wall
 def get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account(instance):
     global SCOUT_PAYMENT_MESSAGE_BANK
     return SCOUT_PAYMENT_MESSAGE_BANK.format(instance.category.name, str(instance.scheduled_at.strftime("%B %d")))
+
+
+def get_amenities_json_from_move_out_request_id(move_out_request_id):
+    move_out_request = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(move_out_request_id).first()
+    from scouts.sub_tasks.utils import MOVE_OUT_AMENITIES_CHECKUP_DEFAULT_JSON
+    initial_json = MOVE_OUT_AMENITIES_CHECKUP_DEFAULT_JSON
+    try:
+        if move_out_request:
+            for booking_facility in move_out_request.tenant.current_booking.facilities.all():
+                name = booking_facility.item.name
+                quantity = booking_facility.quantity
+                status = booking_facility.status
+                booking_facility_id = booking_facility.id
+                initial_json['data']['amenities_dict'][str(booking_facility_id)] = {
+                    'id': booking_facility_id,
+                    'name': name,
+                    'quantity': quantity,
+                    'status': status
+                }
+    except Exception as E:
+        sentry_debug_logger.error(E, exc_info=True)
+
+    return initial_json

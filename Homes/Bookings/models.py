@@ -1,7 +1,8 @@
 from django.db import models
 
 from Homes.Bookings.utils import BookingStatusCategories, BOOKING_PARTIAL, TOKEN_AMOUNT, ONBOARDING_CHARGES, \
-    NEW_TENANT_BOOKING, BookingTypeCategories
+    NEW_TENANT_BOOKING, BookingTypeCategories, FacilityItemTypeCategories, BookingFacilityStatusChoices, \
+    FACILITY_ALLOCATED
 
 
 class Booking(models.Model):
@@ -34,3 +35,26 @@ class Booking(models.Model):
 
     class Meta:
         ordering = ('license_start_date',)
+
+
+class FacilityItem(models.Model):
+    name = models.CharField(max_length=200, blank=True, null=True)
+    type = models.CharField(max_length=15, blank=True, null=True, choices=FacilityItemTypeCategories)
+
+    def __str__(self):
+        return self.name
+
+
+class BookingFacility(models.Model):
+    booking = models.ForeignKey('Booking', on_delete=models.CASCADE, null=True, related_name='facilities')
+    item = models.ForeignKey('FacilityItem', on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1)
+    quantity_acknowledged = models.IntegerField(default=0)
+    remark = models.CharField(max_length=250, blank=True, null=True)
+    status = models.CharField(max_length=50, choices=BookingFacilityStatusChoices, default=FACILITY_ALLOCATED)
+
+    class Meta:
+        verbose_name_plural = 'Booking Facilities'
+
+    def __str__(self):
+        return "{} x {}".format(self.item, self.quantity)
