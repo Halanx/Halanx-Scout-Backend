@@ -557,8 +557,9 @@ def manage_scout_sub_tasks_for_new_task(instance):
 
         from scouts.sub_tasks.models import MoveOutRemark, MoveOutAmenitiesCheckup
         amenities_json = get_amenities_json_from_move_out_request_id(instance.move_out_request_id)
-        MoveOutRemark(task=instance, parent_subtask_category=remark_subtask_category,amenities_json=amenities_json).save()
-        MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=amenity_checkup_category).save()
+        MoveOutRemark(task=instance, parent_subtask_category=remark_subtask_category).save()
+        MoveOutAmenitiesCheckup(task=instance, parent_subtask_category=amenity_checkup_category,
+                                amenities_json=amenities_json).save()
         super(ScoutTask, instance).save()
 
     if instance.category.name == PROPERTY_ONBOARDING:
