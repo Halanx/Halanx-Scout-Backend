@@ -204,7 +204,7 @@ def get_description_for_completion_of_current_task_and_receiving_payment_in_bank
 
 
 def get_amenities_json_from_move_out_request_id(move_out_request_id):
-    move_out_request = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(move_out_request_id).first()
+    move_out_request = TenantMoveOutRequest.objects.using(settings.HOMES_DB).filter(id=move_out_request_id).first()
     from scouts.sub_tasks.utils import MOVE_OUT_AMENITIES_CHECKUP_DEFAULT_JSON
     initial_json = MOVE_OUT_AMENITIES_CHECKUP_DEFAULT_JSON
     try:
