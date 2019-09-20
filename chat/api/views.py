@@ -64,7 +64,7 @@ class ConversationListView(ListAPIView):
                 # TODO verify that task belongs to the customer only
                 task = ScoutTask.objects.filter(id=self.request.GET['task_id']).first()
                 if task and task.conversation:
-                    queryset = queryset.filter(participants=task.scout.chat_participant)
+                    queryset = queryset.filter(participants=task.scout.chat_participant, task=task)
 
         return sorted(queryset,
                       key=lambda t: t.last_message_timestamp,
