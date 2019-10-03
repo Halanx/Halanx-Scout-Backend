@@ -31,7 +31,7 @@ from scouts.utils import default_profile_pic_url, default_profile_pic_thumbnail_
     get_description_for_completion_of_current_task_and_receiving_payment_in_bank_account, MOVE_OUT, \
     MOVE_OUT_AMENITY_CHECKUP, MOVE_OUT_REMARK, get_appropriate_scout_for_the_task, PROPERTY_ONBOARDING, \
     PROPERTY_ONBOARDING_HOUSE_PHOTOS_SUBTASK, PROPERTY_ONBOARDING_HOUSE_AMENITIY_SUBTASK, \
-    get_amenities_json_from_move_out_request_id
+    get_amenities_json_from_move_out_request_id, HOUSE_VISIT
 from utility.image_utils import compress_image
 from utility.logging_utils import sentry_debug_logger
 
@@ -527,6 +527,12 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
 
         # Note: Both the above payments are to be verified by company by changing the status to paid
 
+        if instance.category.name == HOUSE_VISIT:
+            house_visit = HouseVisit.objects.using(settings.HOMES_DB).get(id=instance.visit_id)
+            house_visit.visited = True
+            house_visit.save()
+
+
     # Manage rating given to Scout
     if not old_task.rating_given and instance.rating_given and instance.status == COMPLETE:
         scout = instance.scout
@@ -535,6 +541,7 @@ def scout_task_pre_save_hook(sender, instance, **kwargs):
         scout.rating = ((other_ratings.aggregate(Sum('rating')).get('rating__sum') or 0) + instance.rating) / (
                 len(other_ratings) + 1)
         scout.save()
+
 
 
 def manage_scout_task_conversation(instance):
